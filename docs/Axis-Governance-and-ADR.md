@@ -1,6 +1,6 @@
-# Axis Governance and ADR/RFC Process (Draft)
+# Axis Governance and ADR/RFC Process
 
-This document describes how changes to Axis Core and Domain Modules are proposed, discussed, and accepted.
+This document describes how changes to Axis Core and Domain Profiles are proposed, discussed, and accepted.
 
 ---
 
@@ -9,12 +9,12 @@ This document describes how changes to Axis Core and Domain Modules are proposed
 Axis distinguishes between:
 
 - **Axis Core** – protocol-wide concepts, terminology, schemas, registries, and reference implementations.
-- **Domain Modules** – domain-specific extensions built on top of Axis Core (e.g. ENRG Energy Domain).
+- **Domain Profiles** – domain-specific extensions built on top of Axis Core.
 
 Governance MUST clearly separate:
 
 - changes that affect **Axis Core**,
-- changes that affect only a specific **Domain Module**.
+- changes that affect only a specific **Domain Profile**.
 
 ---
 
@@ -28,7 +28,7 @@ Axis uses two complementary document types:
 Conventions:
 
 - ADRs are stored under `adr/` in this repository (Axis Core ADRs).
-- Domain Modules maintain their own ADR/RFC documents in their repositories.
+- Domain Profiles maintain their own ADR/RFC documents in their repositories.
 - Each ADR:
   - has a unique ID (e.g. `ADR-0009`),
   - has a status (`Proposed`, `Accepted`, `Rejected`, `Superseded`),
@@ -48,94 +48,53 @@ Axis Core Governance is responsible for:
 
 Changes to Axis Core MUST:
 
-1. Be described in an ADR or RFC.
-2. Be discussed and reviewed according to the governance process (e.g. maintainers, working group, or DAO).
-3. Include a migration and compatibility section, when applicable.
-4. Be traceable to implementation changes (commits, releases).
-
-Axis Core MAY define additional process details (e.g. voting, quorum) in a future governance document or smart-contract-based governance.
+- Follow the ADR/RFC process.
+- Be accompanied by updated specifications and tests.
+- Be reviewed by the community.
 
 ---
 
-## 4. Domain Governance
+## 4. Domain Profile Governance
 
-Each Domain Module (e.g. ENRG Energy Domain) maintains its own governance, which is:
+Domain Profiles MAY define their own governance processes, but MUST:
 
-- responsible for domain-specific registries, events, and flows,
-- responsible for domain-specific conformance rules,
-- aligned with Axis Core Governance for any protocol-level impact.
-
-Domain Governance MUST:
-
-- document its own ADR/RFC process,
-- clearly reference Axis Core ADRs it depends on or extends,
-- avoid redefining Axis Core terminology and semantics.
-
-If a domain proposal requires changes to Axis Core, it MUST:
-
-- create or reference an Axis Core ADR/RFC,
-- follow the Axis Core Governance process for that part of the change.
+- Follow Axis Core terminology and schemas.
+- Not conflict with Axis Core specifications.
+- Document any deviations or extensions clearly.
 
 ---
 
-## 5. Change Types and Required Process
+## 5. ADR/RFC Process
 
-Examples of **Core-level changes** (require Axis Core ADR/RFC):
+### 5.1 Proposal
 
-- Adding or changing fields in core attestation format.
-- Modifying core registry schemas or semantics.
-- Introducing new core actors or identity models.
-- Changing conformance levels or definitions.
+1. Create an RFC or ADR document in the appropriate repository.
+2. Fill in the required sections (Context, Decision, Consequences, Related).
+3. Submit as a Pull Request.
 
-Examples of **Domain-level changes** (handled by Domain Governance, with reference to Core):
+### 5.2 Discussion
 
-- Adding new domain-specific event types.
-- Adding domain-specific error codes or capability types.
-- Changing domain-specific token economics or flows (if applicable).
-- Defining additional domain conformance checks.
+- Open discussion period (minimum 7 days).
+- Feedback from maintainers, domain experts, and community.
 
-When in doubt, changes SHOULD be treated as Core-level and reviewed by Axis Core Governance.
+### 5.3 Acceptance
 
----
+- ADR is accepted by the relevant maintainers.
+- RFC may require a formal vote or consensus.
 
-## 6. Versioning and Compatibility
+### 5.4 Implementation
 
-Axis maintains explicit versions for:
+- Implementation follows the accepted ADR/RFC.
+- Updates to specifications and tests are submitted.
 
-- **Axis Core** (e.g. `core v8.0`),
-- each **Domain Module** (e.g. `enrg-energy v1.0`).
+### 5.5 Review
 
-Rules:
-
-- Domain Module versions MUST declare which Axis Core version(s) they are compatible with.
-- Breaking changes to Axis Core MUST be documented in ADRs/RFCs with:
-  - impact analysis,
-  - migration strategy,
-  - deprecation timelines, if applicable.
+- Implementation is reviewed and merged.
 
 ---
 
-## 7. Implementation Traceability
+## 6. Related Documents
 
-Every significant implementation change related to Axis Core SHOULD:
-
-- reference one or more ADRs/RFCs in commit messages or pull requests,
-- update relevant documentation and schemas,
-- update tests and conformance checks.
-
-This allows implementers and auditors to trace:
-
-- why a decision was made,
-- where it is implemented,
-- which versions are affected.
-
----
-
-## 8. Future Work
-
-This document is a draft and will be refined to include:
-
-- concrete roles and responsibilities (maintainers, working groups, DAO),
-- detailed proposal and review workflow,
-- examples of ADR templates and RFC templates,
-- references to on-chain governance mechanisms (if/when adopted).
+- [ADR-0009: Governance Model](../adr/ADR-0009-Governance-Protocol.md)
+- [Axis Protocol Specification](./Axis-Protocol-Specification.md)
+- [CONTRIBUTING.md](../CONTRIBUTING.md)

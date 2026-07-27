@@ -1,59 +1,111 @@
 # Provisioning Service Specification
 
-## Статус
-Черновик (Draft) v0.1
+**Status:** Draft v0.1
 
-## Введение
-Provisioning Service отвечает за регистрацию, идентификацию и первоначальную настройку устройств в экосистеме ENRG. Он является входной точкой для всех новых устройств.
+## Introduction
+
+The Provisioning Service is responsible for device registration, identification, and initial configuration within the Axis Protocol ecosystem. It serves as the entry point for all new devices.
 
 ---
 
-## Процесс регистрации устройства
+## Device Registration Process
 
-### Шаг 1. Генерация ключей
-Устройство (ESP32) при первом включении генерирует пару ключей Ed25519:
-- Приватный ключ — остаётся на устройстве (никогда не покидает его).
-- Публичный ключ — отправляется на сервер для регистрации.
+### Step 1: Key Generation
+The device generates an Ed25519 key pair on first boot:
+- **Private Key** — remains on the device (never leaves it).
+- **Public Key** — sent to the server for registration.
 
-### Шаг 2. Отправка запроса на регистрацию
-Устройство отправляет на Provisioning Service запрос, содержащий:
-- `device_id` — уникальный идентификатор (генерируется на устройстве).
-- `public_key` — публичный ключ в формате Base64.
-- `signature` — подпись запроса (для подтверждения владения ключом).
-- `device_type` — тип устройства (Basic, Verified, Industrial).
-- `firmware_version` — версия прошивки.
+### Step 2: Registration Request
+The device sends a request to the Provisioning Service containing:
+- `device_id` — unique identifier (generated on the device).
+- `public_key` — public key in Base64 format.
+- `signature` — request signature (to prove key ownership).
+- `device_type` — device type (Basic, Verified, Industrial).
+- `firmware_version` — current firmware version.
 
-### Шаг 3. Верификация
-Provisioning Service проверяет:
-- Подпись запроса.
-- Уникальность device_id.
-- Отсутствие дубликатов публичного ключа.
+### Step 3: Verification
+The Provisioning Service verifies:
+- Request signature.
+- Uniqueness of `device_id`.
+- No duplicate public keys exist.
 
-### Шаг 4. Генерация Claim Code
-После успешной верификации сервер генерирует **одноразовый Claim Code** (8 символов, например, `A7F4-K92Q`).
+### Step 4: Claim Code Generation
+After successful verification, the server generates a **one-time Claim Code** (e.g., 8 characters: `A7F4-K92Q`).
 
-### Шаг 5. Возврат ответа устройству
-Устройство получает:
-- `claim_code` — для отображения пользователю.
+### Step 5: Response to Device
+The device receives:
+- `claim_code` — for user display.
 - `status` — `registered`.
-- `oracle_endpoint` — URL оракула для отправки Proof.
+- `oracle_endpoint` — Oracle URL for sending Proofs.
 
-### Шаг 6. Привязка к владельцу (Claim)
-Пользователь вводит Claim Code в Dashboard. После этого устройство привязывается к его кошельку и переходит в состояние `CLAIMED`.
+### Step 6: Owner Linking (Claim)
+The user enters the Claim Code in the Dashboard. The device is then linked to the user's wallet and transitions to the `CLAIMED` state.
 
 ---
 
-## API эндпоинты
+## API Endpoints
 
 ### POST /identity/register
-Регистрация нового устройства.
+Register a new device.
 
-**Запрос:**
+**Request:**
 ```json
 {
-  "device_id": "esp32-001",
-  "public_key": "pXZTI7zgANLzstGbXkX2hDxUtVBrT71Cb1ByGlCkcbw=",
-  "signature": "...",
-  "device_type": "Basic",
+  "device_id": "dev_9e9c644e1580a83b",
+  "public_key": "<base64-encoded-public-key>",
+  "signature": "<base64-encoded-signature>",
+  "device_type": "Verified",
   "firmware_version": "1.0.0"
 }
+Response:
+
+json
+{
+  "claim_code": "A7F4-K92Q",
+  "status": "registered",
+  "oracle_endpoint": "https://oracle.axisprotocol.io"
+}
+POST /identity/claim
+Link a device to an owner using the Claim Code.
+
+Request:
+
+json
+{
+  "claim_code": "A7F4-K92Q",
+  "wallet": "0x1234..."
+}
+Response:
+
+json
+{
+  "status": "claimed",
+  "device_id": "dev_9e9c644e1580a83b"
+}
+GET /identity/status
+Check device status.
+
+Response:
+
+json
+{
+  "device_id": "dev_9e9c644e1580a83b",
+  "state": "ACTIVE",
+  "owner": "0x1234...",
+  "last_heartbeat": "2026-07-27T12:00:00Z"
+}
+Normative Requirements
+Key Security: Private keys MUST never leave the device (see ADR-0001).
+
+Signature Verification: All requests MUST be signed and verified.
+
+Claim Codes: One-time use only; expire after a configurable period.
+
+State Management: Device state MUST be stored in the Device Registry (see ADR-0002).
+
+Related Documents
+ADR-0001: Private Key Never Leaves the Device
+
+ADR-0002: Device Registry as the Single Source of Truth
+
+Device Lifecycle Specification
