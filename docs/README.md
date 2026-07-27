@@ -1,4 +1,14 @@
 # Axis Protocol Documentation
+## 0. Philosophy
+
+The foundational philosophy of the Axis Protocol is captured in the **Architecture Book**:
+
+- [`docs/philosophy/architecture/00_Prologue.md`](philosophy/architecture/00_Prologue.md) — Introduction to the vision
+- [`docs/philosophy/architecture/01_The_Birth_of_an_Idea.md`](philosophy/architecture/01_The_Birth_of_an_Idea.md) — How it all began
+- [`docs/philosophy/architecture/02_When_a_Token_Was_No_Longer_Enough.md`](philosophy/architecture/02_When_a_Token_Was_No_Longer_Enough.md) — Moving beyond tokens
+- [`docs/philosophy/architecture/03_When_the_Protocol_Became_More_Important_than_the_Project.md`](philosophy/architecture/03_When_the_Protocol_Became_More_Important_than_the_Project.md) — Protocol over project
+- [`docs/philosophy/architecture/04_Architecture_Is_Born_Before_the_Code.md`](philosophy/architecture/04_Architecture_Is_Born_Before_the_Code.md) — Architecture first
+- [`docs/philosophy/architecture/05_The_First_Law_of_Trust.md`](philosophy/architecture/05_The_First_Law_of_Trust.md) — The first law of trust
 
 This `docs/` tree describes the **Axis Protocol** – an abstract, domain-agnostic standard for representing and exchanging verifiable claims, attestations, and asset state.
 
