@@ -1,133 +1,69 @@
-# ENRG Protocol
+# Axis Protocol
 
 ## Status
 
-Normative
+Informational (index of normative documents)
 
 ---
 
-# Overview
+## Overview
 
-The ENRG Protocol is an open, implementation-independent standard for establishing cryptographically verifiable trust between physical infrastructure and distributed digital systems.
+Axis Protocol is an open, implementation-independent standard for establishing cryptographically verifiable trust between physical infrastructure and distributed digital systems.
 
-The protocol is defined by the ENRG Protocol Specification together with the normative documents and registries contained in this repository.
+This directory provides a human-oriented entry point into the normative Axis Protocol specification located under `spec/` and related supporting documents.
 
----
-
-# Protocol Documents
-
-## Primary Specification
-
-- ENRG_Protocol_Specification.md
-
-This document is the authoritative definition of the ENRG Protocol.
+The authoritative, normative definition of Axis Protocol behavior is given by the specification documents in `spec/`.
 
 ---
 
-## Foundation
+## Core Specification Documents
 
-- Introduction
-- Protocol Philosophy
-- Design Principles
+The core, implementation- and blockchain-agnostic protocol specification is structured as follows:
 
----
+- `../../spec/overview.md` — high-level overview of Axis Protocol.
+- `../../spec/protocol/README.md` — index of protocol-level documents.
+- `../../spec/protocol/model.md` — core data and event model.
+- `../../spec/protocol/wire-format.md` — serialization and wire format.
+- `../../spec/protocol/validation.md` — validation rules and constraints.
+- `../../spec/protocol/lifecycle.md` — lifecycle and state transitions.
 
-## Architecture
-
-- Architecture Overview
-- Trust Model
-- Component Model
-
----
-
-## Device Layer
-
-- Device Identity
-- Device Lifecycle
-- Provisioning
-- Device Registry
-- Device Manifest
+These documents are **normative** unless explicitly marked otherwise.
 
 ---
 
-## Protocol Services
+## Supporting Documentation
 
-- Policy Engine
-- Oracle
-- Proof-of-Production
+Additional, primarily non-normative documentation is organized as follows:
 
----
+- `../architecture/` — architecture overviews, diagrams, and explanatory material.
+- `../adr/` (if present) — Architecture Decision Records documenting key design choices.
+- `../registry/` (if present) — registries of identifiers, types, and constants used by the protocol.
+- `../rfc/` (if present) — protocol proposals, experiments, and extensions.
+- `../legacy/` (if present) — historical documents kept for reference only.
 
-## Blockchain Layer
-
-- Smart Contract
-- Protocol Economics
-
----
-
-## Communication
-
-- Cryptography
-- Protocol Interfaces
-- Protocol Events
-- Error Model
+Implementations **MUST NOT** derive normative behavior from these documents unless they are explicitly marked as normative or are referenced as such from the core specification under `spec/`.
 
 ---
 
-## Client Ecosystem
+## Domain-Agnostic Design
 
-- Client Applications
-- Software Development Kit (SDK)
+Axis Protocol is designed to be:
 
----
+- **Domain-agnostic** — it does not assume any specific application domain (such as energy, supply chains, finance, etc.).
+- **Infrastructure-agnostic** — it does not depend on any specific blockchain, distributed ledger, or runtime environment.
+- **Implementation-independent** — implementations may vary in technology, but MUST conform to the normative specification under `spec/`.
 
-## Governance
-
-- Protocol Governance
-
----
-
-## Deployment
-
-- Mainnet Readiness
+Domain- or implementation-specific materials (for example, concrete deployments, application profiles, or integrations with particular blockchains or systems) MUST live outside the core specification and MUST NOT redefine Axis Protocol behavior.
 
 ---
 
-## Security
+## Authority
 
-- Security Considerations
+Axis Protocol behavior is normatively defined only by:
 
----
+1. The specification documents located under `spec/`, and
+2. Any explicitly normative registries that those specification documents reference.
 
-## References
+Supporting documents in `docs/` exist to complement and explain the specification. They **MUST NOT** override or contradict the normative specification.
 
-- References
-
----
-
-# Related Documentation
-
-Additional normative documents are located in:
-
-- ../specifications/
-- ../registry/
-
-Architecture documentation is located in:
-
-- ../architecture/
-
-Protocol proposals are located in:
-
-- ../rfc/
-
-Historical documents are located in:
-
-- ../legacy/
-
----
-
-# Authority
-
-The ENRG Protocol Specification SHALL remain the authoritative source defining protocol behavior.
-
-Supporting documents SHALL complement the specification but SHALL NOT redefine protocol behavior.
+In case of any conflict between documentation under `docs/` and the specification under `spec/`, the specification under `spec/` SHALL prevail.
