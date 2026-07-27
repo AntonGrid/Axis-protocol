@@ -1,5 +1,14 @@
 # Axis-protocol
 
-Axis-protocol is an open decentralized trust standard.
-This repository contains the protocol specification, architectural decisions
-and reference materials that are not tied to any specific blockchain or domain.
+Axis protocol specification, architecture and documentation.
+
+This repository contains:
+
+- High-level introduction and one-pagers
+- Architecture documents and ADRs
+- Formal protocol and registry specifications
+- Governance and conformance documents
+
+The reference implementation of the Axis core lives in a separate repository:
+
+👉 https://github.com/AntonGrid/Axis-core
