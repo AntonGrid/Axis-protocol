@@ -1,69 +1,81 @@
-# Axis Core Protocol
+# Axis Protocol — Core Specification
 
-This section defines the **core Axis protocol**. It is **normative**: any
-implementation that claims compliance with Axis MUST follow the rules defined
-here, unless explicitly stated otherwise.
+This directory contains the **core, blockchain-agnostic specification** of the Axis protocol.
 
-The core protocol is described in several layers:
+- It MUST stay independent from any particular chain, runtime or implementation.
+- It defines the *conceptual model*, *wire format*, *validation rules* and *lifecycle semantics*.
+- All chain‑ or product‑specific details (Solana, ENRG, etc.) belong in separate documents/repositories.
 
-- **Conceptual model**  
-  The main entities, roles and interactions in Axis: participants, attestations,
-  claims, proofs and ledgers.
+## Scope
 
-- **Wire format and messages**  
-  How protocol objects are serialized on the wire: message types, fields,
-  canonical encoding and versioning.
+Axis is a protocol for representing and exchanging **stateful claims** about real‑world or digital assets in a verifiable way.
 
-- **Validation rules and invariants**  
-  What makes a protocol object valid, which checks MUST be performed and
-  which MAY be relaxed in specific environments.
+The core spec covers:
 
-- **Lifecycle**  
-  How protocol objects are created, updated, revoked and archived over time.
+- **Conceptual model**:
+  - actors and identities;
+  - assets and claims;
+  - records, events and logs;
+  - namespaces and versioning.
+- **Wire format**:
+  - canonical serialization of records;
+  - hashing and content addressing;
+  - references and linking.
+- **Validation**:
+  - structural validation;
+  - semantic validation (policies, constraints);
+  - versioning and compatibility rules.
+- **Lifecycle**:
+  - creation and evolution of claims;
+  - revocation, supersession, expiration;
+  - conflict resolution and merging.
 
----
+Out of scope for this directory:
 
-## Structure of this section
+- smart‑contract layouts on any chain;
+- gas/fees, transaction formats, RPC details;
+- ENRG‑specific business logic, market rules or pricing.
 
-The `spec/protocol/` directory is expected to contain the following documents:
+## Structure
 
-- `model.md` – conceptual and data model
-- `wire-format.md` – wire format and message definitions
-- `validation.md` – validation rules and invariants
-- `lifecycle.md` – lifecycle of protocol objects and interactions
+- [`model.md`](./model.md) — core conceptual model (actors, assets, claims, records).
+- [`wire-format.md`](./wire-format.md) — canonical on‑wire representation.
+- [`validation.md`](./validation.md) — validation rules and policy model.
+- [`lifecycle.md`](./lifecycle.md) — lifecycle and state transitions.
 
-Additional documents may be added as the protocol evolves (for example,
-`threat-model.md`, `privacy.md`, or `conformance.md`).
+Future additions (optional, not yet finalised):
 
----
+- `security.md` — security, threat model and trust assumptions.
+- `glossary.md` — glossary of core terms.
+- `examples/` — cross‑chain examples and test vectors.
+
+## Design principles
+
+The Axis protocol is designed with the following principles:
+
+1. **Chain‑agnostic**  
+   The protocol must be implementable on multiple chains, off‑chain systems or hybrid setups.
+
+2. **Deterministic & canonical**  
+   The same logical record must have a unique canonical representation and hash across implementations.
+
+3. **Minimal core, extensible edges**  
+   The core spec should define a *small, stable* set of primitives that can be safely extended by domains (like ENRG).
+
+4. **Separation of concerns**  
+   - Protocol spec: what a valid Axis record is and how it behaves.
+   - Implementations: how records are stored, executed or transacted.
+
+5. **Human‑readable, machine‑checkable**  
+   The spec should be readable by humans and strict enough to derive reference tests and validators.
 
 ## Versioning
 
-The Axis protocol is versioned independently from particular implementations
-(such as Axis Core).
+This directory describes **Axis Protocol v0.x (draft)**.
 
-- Each **stable version** of the protocol MUST be tagged in this repository
-  (for example, `v0.1.0-protocol`).
-- Implementations MUST declare which protocol version they implement.
-- Backwards‑incompatible changes to the protocol MUST result in a new
-  **major** or **minor** protocol version.
+- Breaking changes are tracked in a changelog and/or ADRs.
+- Implementations MUST declare:
+  - the **Axis protocol version** they support;
+  - any **extensions** or **profiles** they rely on.
 
-Until the first stable release, the protocol is considered **experimental**
-and MAY change between minor revisions.
-
----
-
-## Reading order
-
-If you are new to Axis and want to implement it:
-
-1. Start with `docs/overview.md` and `docs/Axis-One-Pager.md`.
-2. Read `spec/overview.md` to understand the structure of the specification.
-3. Then follow this order within `spec/protocol/`:
-   - `model.md`
-   - `wire-format.md`
-   - `validation.md`
-   - `lifecycle.md`
-
-After that, consult `spec/registry/` and `spec/api/` for concrete registries
-and external APIs.
+> Implementation‑specific ADRs and architecture documents MUST live outside this directory (e.g. in `docs/` or in implementation repos such as Axis‑core).
