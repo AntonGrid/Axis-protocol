@@ -97,31 +97,31 @@ The following chapters describe each component in detail.
 
 ## Table of Contents
 
-1. Introduction
-2. Protocol Philosophy
-3. Architecture Overview
-4. Design Principles
-5. Component Model
-6. Device Identity
-7. Device Lifecycle
-8. Provisioning Service
-9. Device Registry
-10. Device Manifest
-11. Policy Engine
-12. Oracle
-13. Proof-of-Event
-14. Smart Contract
-15. Protocol Economics
-16. Cryptography
-17. API Specification
-18. Dashboard
-19. SDK
-20. Security Model
-21. Reference Implementation
-22. Governance
-23. Mainnet Requirements
-24. Future Extensions
-25. Glossary
+1. Introduction  
+2. Protocol Philosophy  
+3. Architecture Overview  
+4. Design Principles  
+5. Component Model  
+6. Device Identity  
+7. Device Lifecycle  
+8. Provisioning Service  
+9. Device Registry  
+10. Device Manifest  
+11. Policy Engine  
+12. Oracle  
+13. Proof-of-Event  
+14. Smart Contract  
+15. Protocol Economics  
+16. Cryptography  
+17. API Specification  
+18. Dashboard  
+19. SDK  
+20. Security Model  
+21. Reference Implementation  
+22. Governance  
+23. Mainnet Requirements  
+24. Future Extensions  
+25. Glossary  
 
 ---
 
@@ -272,9 +272,9 @@ Protocol compatibility SHALL be determined by compliance with this specification
 
 ### 2.3 Reference Implementation
 
-The official Axis repository contains the reference implementation.
+The official Axis repositories MAY contain one or more reference implementations.
 
-The reference implementation demonstrates one correct implementation of the protocol.
+Each reference implementation demonstrates one correct implementation of the protocol.
 
 It does not define the protocol itself.
 
@@ -407,14 +407,14 @@ Long-term protocol stability is considered one of the primary design objectives.
 
 The following principles define the foundation of Axis.
 
-1. Trust is established through cryptography.
-2. Architecture is more important than implementation.
-3. Open standards are more valuable than closed products.
-4. Specifications outlive software.
-5. Components must remain independent.
-6. Private keys never leave devices.
-7. Every proof must be independently verifiable.
-8. Protocol evolution must preserve interoperability whenever possible.
+1. Trust is established through cryptography.  
+2. Architecture is more important than implementation.  
+3. Open standards are more valuable than closed products.  
+4. Specifications outlive software.  
+5. Components must remain independent.  
+6. Private keys never leave devices.  
+7. Every proof must be independently verifiable.  
+8. Protocol evolution must preserve interoperability whenever possible.  
 
 These principles SHALL remain valid regardless of future protocol versions or implementation technologies.
 
@@ -435,45 +435,9 @@ This separation enables scalability, maintainability, interoperability, and inde
 ---
 
 ### 3.2 High-Level Architecture
-+----------------------+
-| Dashboard |
-+----------+-----------+
-|
-|
-REST / WebSocket API
-|
-▼
-+----------------------+
-| Policy Engine |
-+----------+-----------+
-|
-+-------------+-------------+
-| |
-▼ ▼
-+----------------+ +----------------+
-| Device Registry| | Oracle |
-+--------+-------+ +--------+-------+
-| |
-| |
-| Proof Verification
-| |
-▼ ▼
-+----------------+ +----------------+
-| Provisioning | | Smart Contract |
-| Service | +--------+-------+
-+--------+-------+ |
-| |
-▼ ▼
-+----------------+ Blockchain Network
-| Device Manifest|
-+--------+-------+
-|
-▼
-+----------------+
-| Device |
-+----------------+
 
-text
++----------------------+ | Dashboard | +----------+-----------+ | | REST / WebSocket API | ▼ +----------------------+ | Policy Engine | +----------+-----------+ | +-------+-------------+ | | ▼ ▼ +----------------+ +----------------+ | Device Registry| | Oracle | +--------+-------+ +--------+-------+ | | | | | Proof Verification | | ▼ ▼ +----------------+ +----------------+ | Provisioning | | Smart Contract | | Service | +--------+-------+ +--------+-------+ | | | ▼ ▼ +----------------+ Blockchain Network | Device Manifest| +--------+-------+ | ▼ +----------------+ | Device | +----------------+
+
 
 ---
 
@@ -481,17 +445,17 @@ text
 
 The Axis Protocol consists of the following logical components.
 
-| Component | Responsibility |
-|------------|----------------|
-| Device | Produces Proof-of-Event |
-| Provisioning Service | Registers new devices |
-| Device Registry | Stores device identity and state |
-| Device Manifest | Delivers signed configuration |
-| Oracle | Verifies Proofs |
-| Policy Engine | Applies protocol policies |
-| Smart Contract | Executes protocol state changes |
-| Dashboard | User interaction |
-| SDK | Developer integration |
+| Component         | Responsibility                  |
+|------------------|----------------------------------|
+| Device           | Produces Proof-of-Event         |
+| Provisioning Service | Registers new devices       |
+| Device Registry  | Stores device identity and state|
+| Device Manifest  | Delivers signed configuration   |
+| Oracle           | Verifies Proofs                 |
+| Policy Engine    | Applies protocol policies       |
+| Smart Contract   | Executes protocol state changes |
+| Dashboard        | User interaction                |
+| SDK              | Developer integration           |
 
 ---
 
@@ -607,7 +571,7 @@ Policy Engine SHALL remain independent from Oracle implementation.
 
 ### 3.11 Smart Contract
 
-The Smart Contract represents the protocol state on-chain.
+The Smart Contract represents the protocol state on-chain (where applicable).
 
 Responsibilities include:
 
@@ -815,37 +779,9 @@ Software storage MAY be used only for development and testing.
 ### 4.12 Identity Lifecycle
 
 Identity progresses through the following states:
-UNREGISTERED
-│
-▼
-REGISTERED
-│
-▼
-CLAIMED
-│
-▼
-PROVISIONED
-│
-▼
-ACTIVE
-│
-├── → QUARANTINE
-│
-QUARANTINE
-│
-├── → ACTIVE
-│
-├── → MAINTENANCE
-│
-▼
-MAINTENANCE
-│
-├── → ACTIVE
-│
-▼
-REVOKED
 
-text
+UNREGISTERED │ ▼ REGISTERED │ ▼ CLAIMED │ ▼ PROVISIONED │ ▼ ACTIVE │ ├── → QUARANTINE │ QUARANTINE │ ├── → ACTIVE │ ├── → MAINTENANCE │ ▼ MAINTENANCE │ ├── → ACTIVE │ ▼ REVOKED
+
 
 The meaning of each state is defined in Chapter 5.
 
@@ -905,35 +841,35 @@ The lifecycle ensures clarity, security, and auditability.
 
 ### 5.2 Lifecycle States
 
-| State | Description |
-|-------|-------------|
-| **UNREGISTERED** | Device is unknown to the system. |
-| **REGISTERED** | Device has cryptographic identity but no owner. |
-| **CLAIMED** | Device is linked to an owner. |
-| **PROVISIONED** | Device is configured and ready. |
-| **ACTIVE** | Device is fully operational. |
-| **QUARANTINE** | Device is suspected of malfunction. |
-| **MAINTENANCE** | Device is undergoing maintenance. |
-| **REVOKED** | Device is permanently decommissioned. |
+| State         | Description                               |
+|--------------|-------------------------------------------|
+| **UNREGISTERED** | Device is unknown to the system.     |
+| **REGISTERED**   | Device has cryptographic identity but no owner. |
+| **CLAIMED**      | Device is linked to an owner.        |
+| **PROVISIONED**  | Device is configured and ready.      |
+| **ACTIVE**       | Device is fully operational.         |
+| **QUARANTINE**   | Device is suspected of malfunction.  |
+| **MAINTENANCE**  | Device is undergoing maintenance.    |
+| **REVOKED**      | Device is permanently decommissioned.|
 
 ---
 
 ### 5.3 State Transitions
 
-| From | To | Trigger |
-|------|----|---------|
-| UNREGISTERED | REGISTERED | Registration request |
-| REGISTERED | CLAIMED | Owner linking |
-| CLAIMED | PROVISIONED | Configuration complete |
-| PROVISIONED | ACTIVE | Activation command |
-| ACTIVE | QUARANTINE | Suspicious activity |
-| ACTIVE | MAINTENANCE | Scheduled maintenance |
-| ACTIVE | REVOKED | Owner/system revocation |
-| QUARANTINE | ACTIVE | Issue resolved |
-| QUARANTINE | REVOKED | Unresolvable issue |
-| QUARANTINE | MAINTENANCE | Maintenance required |
-| MAINTENANCE | ACTIVE | Maintenance complete |
-| MAINTENANCE | REVOKED | Cannot be restored |
+| From        | To          | Trigger                 |
+|-------------|-------------|-------------------------|
+| UNREGISTERED| REGISTERED  | Registration request    |
+| REGISTERED  | CLAIMED     | Owner linking           |
+| CLAIMED     | PROVISIONED | Configuration complete  |
+| PROVISIONED | ACTIVE      | Activation command      |
+| ACTIVE      | QUARANTINE  | Suspicious activity     |
+| ACTIVE      | MAINTENANCE | Scheduled maintenance   |
+| ACTIVE      | REVOKED     | Owner/system revocation |
+| QUARANTINE  | ACTIVE      | Issue resolved          |
+| QUARANTINE  | REVOKED     | Unresolvable issue      |
+| QUARANTINE  | MAINTENANCE | Maintenance required    |
+| MAINTENANCE | ACTIVE      | Maintenance complete    |
+| MAINTENANCE | REVOKED     | Cannot be restored      |
 
 ---
 
@@ -959,12 +895,12 @@ It handles registration, identity verification, and initial configuration.
 
 ### 6.2 Registration Flow
 
-1. **Key Generation** — device generates Ed25519 key pair.
-2. **Registration Request** — device sends public key and metadata.
-3. **Verification** — service verifies signature and uniqueness.
-4. **Claim Code** — service generates one-time claim code.
-5. **Response** — device receives claim code and Oracle endpoint.
-6. **Owner Linking** — user enters claim code, device transitions to CLAIMED.
+1. **Key Generation** — device generates Ed25519 key pair.  
+2. **Registration Request** — device sends public key and metadata.  
+3. **Verification** — service verifies signature and uniqueness.  
+4. **Claim Code** — service generates one-time claim code.  
+5. **Response** — device receives claim code and Oracle endpoint.  
+6. **Owner Linking** — user enters claim code, device transitions to CLAIMED.  
 
 ---
 
@@ -975,6 +911,7 @@ It handles registration, identity verification, and initial configuration.
 Register a new device.
 
 **Request:**
+
 ```json
 {
   "device_id": "dev_9e9c644e1580a83b",
@@ -985,7 +922,6 @@ Register a new device.
 }
 Response:
 
-json
 {
   "claim_code": "A7F4-K92Q",
   "status": "registered",
@@ -996,14 +932,12 @@ Link device to owner.
 
 Request:
 
-json
 {
   "claim_code": "A7F4-K92Q",
-  "wallet": "0x1234..."
+  "owner_id": "owner_1234"
 }
 Response:
 
-json
 {
   "status": "claimed",
   "device_id": "dev_9e9c644e1580a83b"
@@ -1016,17 +950,11 @@ It maintains identity, ownership, state, and history.
 
 7.2 Registry Responsibilities
 Store device identity (Device ID, public key)
-
-Track ownership (wallet addresses)
-
+Track ownership (owner identifiers, e.g., accounts)
 Maintain lifecycle state
-
 Record capabilities and trust level
-
 Store firmware version
-
-Audit history
-
+Maintain audit history
 7.3 Registry Integrity
 All updates MUST be authorized.
 
@@ -1046,27 +974,19 @@ It defines operational parameters for the device.
 The Manifest contains:
 
 device_id — unique identifier
-
 trust_level — trust classification
-
 capabilities — device capabilities
-
 heartbeat_interval — heartbeat frequency
-
 proof_interval — proof frequency
-
 oracle_endpoint — Oracle URL
-
 policy_version — policy version
-
 signature — cryptographic signature
-
 8.3 Manifest Security
-Manifest MUST be signed by the Registry.
+Manifest MUST be signed by the Registry (or another authorized signing authority defined by the protocol deployment).
 
 Device MUST verify signature before use.
 
-Signature MUST be checked using Registry public key.
+Signature MUST be checked using the Registry (or authorized signer) public key.
 
 Manifest MUST be stored securely on device.
 
@@ -1074,36 +994,27 @@ Manifest MUST be stored securely on device.
 9.1 Overview
 The Oracle performs cryptographic verification of device proofs.
 
-It acts as a bridge between devices and the blockchain.
+It acts as a bridge between devices and the blockchain (where a blockchain is used).
 
 9.2 Oracle Responsibilities
 Receive Proofs from devices
-
 Verify cryptographic signatures
-
 Validate nonce and timestamp
-
 Aggregate data (if applicable)
-
-Submit verified data to Smart Contract
-
+Submit verified data to Smart Contract (if applicable)
 9.3 Proof Verification
 The Oracle SHALL verify:
 
 Signature — using device public key
-
 Nonce — not previously used
-
 Timestamp — within acceptable window
-
 Payload — well-formed and valid
-
 9.4 Oracle Integrity
 Oracle MUST NOT modify Proof content.
 
 Oracle MUST NOT make policy decisions.
 
-Oracle MUST NOT store device state.
+Oracle MUST NOT store device lifecycle state as the primary source of truth.
 
 10. Policy Engine
 10.1 Overview
@@ -1113,17 +1024,12 @@ It determines whether Proofs are accepted or rejected.
 
 10.2 Policy Responsibilities
 Evaluate Proofs against defined rules
-
 Make quarantine decisions
-
 Assess trust levels
-
 Detect anomalies
-
 Enforce OTA requirements
-
 10.3 Policy Independence
-Policy Engine MUST be independent from Oracle.
+Policy Engine MUST be independent from Oracle implementation.
 
 Policy decisions MUST be auditable.
 
@@ -1131,19 +1037,15 @@ Policies MUST be versioned and documented.
 
 11. Smart Contract
 11.1 Overview
-The Smart Contract represents the protocol state on-chain.
+The Smart Contract represents the protocol state on-chain (for deployments that use a blockchain).
 
-It executes state changes and manages assets.
+It executes state changes and manages assets where applicable.
 
 11.2 Contract Responsibilities
 Store device registrations (if applicable)
-
 Manage protocol state
-
-Execute asset operations
-
-Support governance
-
+Execute asset operations (if applicable)
+Support governance (if applicable)
 11.3 Contract Integrity
 Contract MUST be verified and audited.
 
@@ -1172,26 +1074,18 @@ Messages SHALL be signed using Ed25519.
 The signed message SHALL include:
 
 Device ID
-
 Timestamp
-
 Nonce
-
 Payload
-
 12.4 Verification
 Receivers SHALL verify Ed25519 signatures.
 
 Verification SHALL include:
 
 Public key lookup
-
 Signature verification
-
 Nonce check
-
 Timestamp validation
-
 13. Security Model
 13.1 Threat Model
 The Axis Protocol addresses the following threats:
@@ -1200,44 +1094,33 @@ Threat	Mitigation
 Spoofing	Ed25519 signatures
 Tampering	Cryptographic integrity
 Repudiation	Nonce and timestamp
-Information Disclosure	Minimal on-chain data
-Denial of Service	Gas limits, rate limits
-Elevation of Privilege	PDA architecture, authority checks
+Information Disclosure	Minimal on-chain data (where used)
+Denial of Service	Gas limits / rate limits / throttling
+Elevation of Privilege	Contract architecture, authority checks
 13.2 Security Layers
 Device Layer — Secure Element, signed firmware
-
-Network Layer — TLS, decentralized oracles
-
-Contract Layer — Checked arithmetic, PDA, authority checks
-
+Network Layer — TLS, authenticated channels, optionally decentralized oracle networks
+Contract Layer — Checked arithmetic, access control, authority checks
 Reputation Layer — Trust scoring, anomaly detection
-
 14. Governance
 14.1 Overview
 The Axis Protocol is governed by the community.
 
 Governance ensures the protocol can evolve while maintaining stability.
 
+The protocol does not mandate the existence of a governance token or a particular voting mechanism. Individual deployments MAY choose their own governance structures.
+
 14.2 Governance Components
 ADR/RFC Process — documented changes
-
-Token Holders — vote on protocol parameters
-
+Token holders (if a governance token exists) — MAY vote on protocol parameters
 Guardians — manage emergency operations
-
 Maintainers — prepare code and tests
-
 14.3 Decision Process
 Proposal — submit ADR/RFC
-
 Discussion — community feedback
-
-Voting — token holders vote
-
+Voting — decision via the governance mechanism of a given deployment (which MAY include token voting)
 Implementation — code and tests
-
 Deployment — protocol update
-
 15. Future Extensions
 15.1 Post-Quantum Cryptography
 Future versions MAY support post-quantum algorithms.
@@ -1258,7 +1141,7 @@ Asset	Something about which claims are made
 Attestation	Signed statement about a claim or asset
 Claim	Structured statement about an asset
 Device	Physical source of measurable events
-Domain Profile	Domain-specific extension of Axis Core
+Domain Profile	Domain-specific extension of the core Axis protocol
 Oracle	Component that verifies Proofs
 Policy	Set of rules governing claims and attestations
 Proof	Cryptographic evidence of an event
@@ -1266,9 +1149,7 @@ Record	Fundamental unit of protocol data
 Registry	Source of truth for protocol entities
 Normative References
 RFC 2119: Key words for use in RFCs to Indicate Requirement Levels
-
 Ed25519: High-speed high-security signatures
-
 Document History
 Version	Date	Changes
 1.0 Draft	2026-07-27	Initial version based on Axis Protocol Specification

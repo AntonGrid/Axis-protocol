@@ -1,164 +1,262 @@
+# Axis Protocol – Entity and Message Lifecycle
 
-Axis Protocol — Lifecycle and State Transitions
-This document describes the lifecycle of Axis Records and Claims: how they are created, evolved, superseded and revoked.
+This document describes the **logical lifecycle** of entities and messages in systems built on Axis Protocol.  
+It is **implementation‑neutral** and does not assume any specific ledger, database, blockchain, or runtime.
 
-The goal is to provide a transport‑ and chain‑agnostic model that can be mapped to different execution environments (blockchains, off‑chain services, hybrid setups).
+Axis Protocol itself defines **messages and invariants**, not a global state model.  
+However, most deployments will interpret messages as operations on some notion of *entities* and *state*.  
+This document provides a common vocabulary and recommended patterns for such lifecycles.
 
-1. High‑level lifecycle
-At a high level, a Record goes through the following conceptual stages:
+---
 
-Draft — constructed by an issuer but not yet signed or published.
-Signed — carries one or more valid signatures from Actors.
-Published — made available to other participants (e.g. via a blockchain, message bus, or API).
-Validated — accepted or rejected by validators according to validation.md.
-Evolved — may be superseded or complemented by later Records.
-Finalized (optional) — domain‑specific notion of completion (e.g. settlement, closure, retirement).
-The protocol itself only standardizes the representation and semantics of these transitions at the Record level, not the transport or execution mechanics.
+## 1. Concepts
 
-Profiles MAY introduce additional lifecycle stages, but MUST NOT contradict the core stages above.
+### 1.1. Entity
 
-2. Creation
-2.1 Drafting
-An issuer constructs a draft Record:
+An **Entity** is any logical object whose state is tracked via Axis messages.
 
-fills in the header (version, namespace, issuer, timestamp, etc.);
-adds Claims in the body;
-optionally references policies or profiles (e.g. by namespace or explicit profile ID).
-At this stage:
+Examples (illustrative only):
 
-record_id is not yet final (because signatures may depend on it, and it depends on the canonical form),
-the Record is not yet visible to other participants.
-2.2 Signing and record ID
-A typical flow:
+- Devices, sensors, meters
+- Contracts, agreements, orders
+- Accounts, positions, assets
 
-Serialize the draft Record (without record_id) into canonical form.
-Compute the hash and derive the Record ID (see wire-format.md).
-Add record_id to the header.
-Serialize again in canonical form (now including record_id).
-Sign this canonical byte sequence and attach signatures.
-Implementations MAY optimize this process, as long as the final state satisfies:
+Each entity is identified by:
 
-record_id equals the hash of the Record (with record_id field) according to the chosen scheme;
-signatures cover the final canonical representation;
-the canonicalization rules in the wire format spec are respected.
-3. Publication
-The protocol does not mandate a specific publication mechanism. Common patterns:
+- `domain` – high‑level application namespace.
+- `entity_type` – type of entity within the domain.
+- `entity_id` – stable identifier of a specific entity instance.
 
-On‑chain:
-The Record (or its hash plus a pointer) is embedded in a blockchain transaction.
-Off‑chain with anchoring:
-Full Records live in a distributed storage or API; hashes or commitments are anchored on‑chain.
-Pure off‑chain:
-Records are exchanged via messaging systems or APIs without any blockchain involvement.
-Normative:
+Axis Protocol does not prescribe how entities are stored or represented internally.
 
-L-001: Whatever the publication mechanism, it MUST NOT alter the canonical content of the Record.
-L-002: Implementations SHOULD provide a way to retrieve the full Record given its record_id (directly or via an index/registry).
-L-003: If publication includes only a hash or commitment, the mapping from record_id to the stored content MUST be well‑defined and verifiable.
-4. Evolution, supersession and revocation
-Axis is fundamentally append‑only at the Record level: existing Records are never modified or deleted; instead, new Records change how previous ones are interpreted.
+### 1.2. Messages and state transitions
 
-4.1 Evolution
-A Claim or other domain entity may evolve over time via additional Records.
+Implementations typically interpret messages as **state transitions** or **state observations**.
 
-Patterns:
+Common patterns:
 
-Append‑only enrichment:
-New Records append new Claims or metadata; consumers reconstruct state by folding all Records in order.
-State updates:
-New Records explicitly supersede or update previous ones for a given entity or claim type.
-Policy‑driven evolution:
-Policies or profiles describe how certain claim types interact across Records (e.g. accumulating measurements, updating attributes).
-Normative:
+- **Commands** – requests to change state.
+- **Events** – records of facts or state changes.
+- **Queries / QueryResponses** – read‑only access to current or derived state.
+- **Notifications / Errors** – auxiliary messages.
 
-L-010: Profiles that define evolving entities MUST specify how to interpret sequences of Records affecting the same identifier(s).
-L-011: Implementations MUST NOT mutate already published Records; evolution MUST be expressed via new Records.
-4.2 Supersession
-Supersession expresses that a new Record replaces some aspect of one or more previous Records.
+The **lifecycle** of an entity is thus the sequence of valid state transitions driven by messages.
 
-Normative:
+---
 
-L-020: A Record that supersedes another SHOULD:
-reference the superseded record_id (or multiple IDs) in a well‑defined field or claim; and
-clearly indicate the scope of supersession (e.g. specific claims vs. entire Record).
-L-021: Profiles MUST define:
-whether supersession is allowed for their entities/claims;
-who is authorized to issue superseding Records (e.g. only the original issuer, current holder, or a designated authority);
-how to resolve conflicting or chained supersessions.
-4.3 Revocation
-Revocation expresses that a previously accepted Record or Claim is no longer considered valid for future evaluations.
+## 2. Generic entity lifecycle
 
-Normative:
+Axis Protocol is domain‑agnostic, but most entities follow some variation of the following generic phases:
 
-L-030: A revocation Record MUST:
-reference the record_id (or claim identifier) it revokes;
-be authorized according to profile/policy (e.g. issuer, authority, or governance entity);
-be validated like any other Record.
-L-031: Effects of revocation are semantic, not mechanical:
-Validators and consumers MUST treat revoked content as invalid from the revocation point onward, according to the policy definition.
-Historical truth is preserved: the original Record still exists, but its status changes.
-Profiles SHOULD define:
+1. **Non‑existent** – the entity is not yet known to the system.
+2. **Pending / Initializing** – the entity is in the process of being created or activated.
+3. **Active** – the entity is usable according to domain rules.
+4. **Suspended / Disabled** – the entity exists but is not currently active.
+5. **Terminated / Retired** – the entity is no longer active and cannot be reactivated (unless the domain explicitly allows it).
 
-how revocation interacts with supersession and expiration;
-whether revocation is reversible or itself revocable.
-5. Expiration
-Claims may have explicit or implicit expiration:
+Each domain MAY refine or rename these phases, but SHOULD define:
 
-explicit time bounds (e.g. valid_from / valid_until);
-profile‑ or policy‑driven timeouts (e.g. “claims older than 1 year are no longer trusted”).
-Normative:
+- which messages are allowed in each phase,
+- what transitions between phases are valid,
+- what invariants must hold in each phase.
 
-L-040: When evaluating a Record at time T, validators MUST consider expiration rules defined by the active profiles/policies.
-L-041: Profiles SHOULD specify whether expired content:
-is treated equivalently to revoked content, or
-remains valid for some limited use cases (e.g. historical reporting).
-6. Views and state reconstruction
-Because Axis is record‑based, any notion of “current state” is derived from a set of accepted Records under a given policy context.
+---
 
-A view is the result of applying:
+## 3. Creation
 
-all accepted Records (or a defined subset),
-under a given profile/policy set,
-at a given evaluation time T.
-Different implementations may maintain views:
+### 3.1. Creation messages
 
-in memory (for online validation),
-in databases (materialized state),
-implicitly (recomputed on demand from the Record log).
-The protocol does not constrain how views are stored; it only constrains:
+Entity creation is typically initiated by one of the following:
 
-how Records are represented,
-how they can be interpreted in a way that is consistent across implementations using the same profiles.
-Normative:
+- A **Command** requesting creation (e.g. “CreateDevice”, “OpenAccount”).
+- A direct **Event** indicating that an entity now exists (e.g. imported from an external system).
 
-L-050: Profiles MUST define how to derive their domain‑specific views from sequences of Records (e.g. ordering, conflict resolution).
-L-051: Implementations that expose views to clients SHOULD document:
-which policies/profiles are applied,
-which Records are included or excluded (e.g. revoked or expired).
-7. Mapping to implementations
-While the protocol is transport‑ and chain‑agnostic, typical mappings include:
+Axis Protocol does not fix which pattern must be used, but deployments SHOULD document:
 
-Smart‑contract implementation:
+- The allowed creation messages per `entity_type`.
+- Required fields and preconditions for creation.
 
-Each Record is a transaction payload or event;
-Contract code enforces a subset of structural and semantic validation rules;
-Off‑chain services may perform richer policy evaluation, cross‑Record analysis, and view materialization.
-Off‑chain service:
+### 3.2. Preconditions for creation (examples)
 
-Records are submitted via an API;
-The service stores them in a database and exposes views and query APIs;
-Optional anchoring to a blockchain (or other audit log) for integrity and timestamping.
-Hybrid setups:
+Typical state‑independent preconditions:
 
-Critical invariants are enforced on‑chain or in a consensus system;
-Non‑critical or high‑volume logic is handled off‑chain, still using Axis Records and profiles.
-Normative:
+- `entity_id` is syntactically valid.
+- All required initialization fields are present and valid.
 
-L-060: Profiles and concrete implementations MUST document:
-how lifecycle stages map to their execution environment;
-which parts of validation are enforced in which layer (on‑chain / off‑chain / other);
-how anchoring, discovery, and retrieval of Records work in practice.
-L-061: Implementations that claim conformance to Axis Protocol MUST at least:
-preserve the canonical Record content end‑to‑end,
-respect the lifecycle semantics defined in this document,
-document any additional lifecycle rules they introduce.
+Typical state‑dependent preconditions:
+
+- No existing active or pending entity with the same `entity_id` in the same `domain` and `entity_type`, unless the domain explicitly allows this.
+- Optional authorization checks (e.g. the creator is allowed to create entities of this type).
+
+If any precondition fails, the creation message MUST be rejected.
+
+---
+
+## 4. Updates
+
+### 4.1. Update messages
+
+Updates are messages that modify or extend an existing entity’s state.  
+They are typically modeled as **Commands** and/or **Events**.
+
+Key questions each domain MUST answer:
+
+- Which fields of an entity are mutable vs immutable?
+- What lifecycle phase(s) allow updates?
+- How are partial updates represented (e.g. patches vs full snapshots)?
+
+### 4.2. Preconditions for updates
+
+Examples of common rules:
+
+- The entity MUST exist and be in a phase that permits updates (e.g. `Active`).
+- The update MUST respect domain‑specific constraints (e.g. cannot reduce a counter below zero).
+- If optimistic concurrency is used, version or revision numbers MUST match.
+
+If these conditions are not met, the update message MUST be rejected or lead to a defined conflict resolution behavior.
+
+---
+
+## 5. Suspension and resumption
+
+Some domains require temporarily disabling an entity (e.g. maintenance mode for a device, account freeze).
+
+### 5.1. Suspension
+
+A **suspend** operation typically:
+
+- Requires the entity to be in an `Active` phase.
+- Transitions the entity to a `Suspended/Disabled` phase.
+- May carry a reason code or metadata.
+
+In the `Suspended` phase:
+
+- Certain operations (e.g. usage, billing, external communication) may be blocked.
+- Maintenance or administrative operations may still be allowed.
+
+### 5.2. Resumption
+
+A **resume** operation:
+
+- Requires the entity to be in `Suspended` phase.
+- Transitions it back to `Active`, if all necessary conditions are satisfied (e.g. resolved issues, valid configuration).
+
+Domains SHOULD specify:
+
+- which operations are allowed in suspended state,
+- what validation is required before resuming.
+
+---
+
+## 6. Termination / retirement
+
+Termination (or retirement) marks the logical end of an entity’s active lifecycle.
+
+Characteristics:
+
+- The entity transitions from `Active` or `Suspended` to `Terminated/Retired`.
+- No further “normal” operations are allowed unless the domain explicitly supports reactivation.
+
+Domains SHOULD define:
+
+- whether termination is reversible,
+- which messages, if any, are permitted after termination (e.g. audits, archival operations, corrections).
+
+Common rules:
+
+- Attempts to perform operations that require an `Active` entity on a `Terminated` one MUST be rejected or treated as invalid according to domain policy.
+
+---
+
+## 7. Message lifecycle and ordering
+
+Axis Protocol itself does not mandate a global ordering mechanism.  
+However, many deployments impose ordering at the entity level (e.g. via sequence numbers or timestamps).
+
+### 7.1. Message ordering per entity
+
+Typical strategies:
+
+- **Monotonic sequence numbers**
+  - Each entity tracks a `version` or `sequence` field.
+  - Messages carry the expected version; mismatches lead to rejections or conflict handling.
+
+- **Time‑based ordering**
+  - Timestamps are used for causality hints.
+  - Late or out‑of‑order messages are either rejected or reconciled by domain logic.
+
+Implementations SHOULD clearly document:
+
+- whether message ordering is strictly enforced,
+- how out‑of‑order messages are handled.
+
+### 7.2. Idempotence and duplication
+
+Deployments SHOULD define which messages are intended to be **idempotent** at the entity level.
+
+Examples:
+
+- Retrying the same “enable feature” command with the same parameters may be treated as idempotent.
+- Re‑processing a “decrement balance by X” event may not be idempotent unless carefully designed.
+
+Strategies for handling duplicates:
+
+- Stable operation identifiers within messages.
+- Deduplication caches or logs per entity.
+- Version checks and explicit conflict resolution.
+
+---
+
+## 8. Error handling in lifecycles
+
+When a message cannot be applied to an entity due to lifecycle violations (e.g. wrong phase, conflicting update), the system SHOULD:
+
+- Reject the message, and
+- Optionally emit an `Error` message or equivalent diagnostic record, correlated via `correlation_id` where appropriate.
+
+Examples of lifecycle‑related errors:
+
+- Attempt to update a non‑existent entity.
+- Attempt to modify an entity in a forbidden phase (e.g. terminated).
+- Version or sequence mismatch under optimistic concurrency.
+
+The exact error catalog is domain‑specific but SHOULD be documented and applied consistently.
+
+---
+
+## 9. Multi‑entity workflows
+
+Many real‑world processes involve multiple entities (e.g. an order referencing multiple devices, or a contract spanning several accounts).
+
+Axis Protocol does not prescribe a specific workflow engine, but recommends:
+
+- Explicit modeling of relationships between entities in messages.
+- Clear rules for atomicity or lack thereof (e.g. can partial success occur?).
+- Well‑defined compensation patterns where full rollback is not possible.
+
+Lifecycle rules for multi‑entity operations SHOULD specify:
+
+- Which entities must exist and in what phases.
+- How partial failures impact overall workflow state.
+
+---
+
+## 10. Relationship to implementations
+
+- **Axis Protocol** defines:
+  - how entities are referenced in messages (`domain`, `entity_type`, `entity_id`),
+  - general expectations around lifecycles and state transitions,
+  - the separation between protocol‑level invariants and domain‑specific lifecycles.
+
+- **Implementations and domain specifications** define:
+  - concrete entity lifecycle diagrams and allowed transitions,
+  - message schemas that drive those transitions,
+  - storage models, indexing strategies and access control.
+
+An implementation that claims conformance with Axis Protocol SHOULD:
+
+- Provide a clear mapping from Axis messages to entity lifecycle transitions.
+- Enforce lifecycle rules consistently at validation and execution time.
+- Document domain‑specific lifecycle states, allowed transitions, and error conditions.
+
+Where this document is abstract, domain authors are expected to refine and specialize these patterns for their use cases, without contradicting the general expectations described here.

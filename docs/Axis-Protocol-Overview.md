@@ -1,94 +1,94 @@
-# Axis Protocol: Web4 Architecture
+# Axis Protocol: Trust Layer for Physical and Digital Worlds
 
-## 1. From Web3 to Web4
+## 1. Beyond Web3: Why Axis Exists
 
-Web3 answers the question:
+Web3 focuses on the question:
 
-> "How can ownership and operations on **digital objects** (tokens, NFTs, smart contract states) be decentralized and verifiable?"
+> “How can ownership and operations on **digital objects** (tokens, NFTs, smart contract states) be decentralized and verifiable?”
 
-Web3 blockchains see the world through:
+Typical Web3 view of the world:
 
-- addresses (accounts),
+- addresses / accounts,
 - digital assets (balances, tokens),
 - smart contract state.
 
-Everything that happens **outside the blockchain** is, by default:
+Everything that happens **outside** this environment is, by default:
 
-- either non-existent,
-- or exists as "data in a transaction" that cannot be trusted without external infrastructure (oracles, API gateways, etc.).
+- either invisible to the system,
+- or just “data in a transaction” that cannot be trusted without additional infrastructure (oracles, APIs, off-chain services).
 
 **Axis Protocol** adds another layer:
 
-> "How can **real-world events** become part of decentralized consensus with the same rigorous verifiability as balances and hashes?"
+> “How can **real‑world events** become part of a cryptographically verifiable system with the same rigor as balances and hashes?”
 
-That is:
+In other words:
 
-- **Web3:** decentralized **digital states**.
-- **Axis (Web4 level):** decentralized **verifiable physical-world events** + digital states and the economy around them.
+- **Web3:** decentralized **digital state**.
+- **Axis:** decentralized **verifiable real‑world events**, plus digital states and the economies around them.
 
 ---
 
-## 2. Axis Architecture as a Web4 Layer
+## 2. Axis as a Trust Layer
 
-Axis introduces primitives that are not available "out of the box" in Web3:
+Axis introduces primitives that are not provided “out of the box” in typical Web3 systems.
 
-### 2.1. Real-World Actors (Devices and Processes)
+### 2.1. Real‑World Actors as First‑Class Citizens
 
-In Web3, everything revolves around:
+In Web3, most logic revolves around:
 
-- users (keys, wallets),
+- users (cryptographic keys, accounts),
 - smart contracts.
 
-Axis adds a separate class of first-class entities:
+Axis introduces and formalizes another class of first‑class entities:
 
 - devices (meters, inverters, sensors, controllers),
 - industrial control systems,
-- and any physical actors with cryptographic identity.
+- any physical actor with a cryptographic identity.
 
-They become **full participants in the protocol**, not just sources of "data in comments."
+They become **full participants in the protocol**, not just external data sources.
 
-### 2.2. From Measurements to Proofs
+### 2.2. From Raw Measurements to Verifiable Proofs
 
-Traditional systems: device measures → sends data → server trusts it.
+Typical pattern: a device measures something → sends data → a server decides whether to trust it.
 
-Axis Protocol: device measures → generates cryptographic proof → system verifies proof independently.
+Axis Protocol: a device measures something → produces a cryptographic proof → the system independently verifies that proof.
 
-This shift transforms:
+This shifts:
 
-- **Trust** from "I trust this server" to "I trust this proof"
-- **Security** from "the data is correct because we say so" to "the data is correct because it's cryptographically provable"
-
----
-
-### 2.3. Device Lifecycle as a First-Class Citizen
-
-Devices in Axis have a **full lifecycle**:
-
-| Stage | Description |
-|-------|-------------|
-| **UNREGISTERED** | Device is unknown to the system. |
-| **REGISTERED** | Device has a cryptographic identity. |
-| **CLAIMED** | Device is linked to an owner. |
-| **PROVISIONED** | Device is configured and ready. |
-| **ACTIVE** | Device is fully operational. |
-| **QUARANTINE** | Device is suspected of malfunction. |
-| **MAINTENANCE** | Device is undergoing maintenance. |
-| **REVOKED** | Device is permanently decommissioned. |
-
-This lifecycle is enforced by the protocol, not by external systems.
+- **Trust** from “I trust this server” to “I trust this proof”.
+- **Security** from “data is correct because a system says so” to “data is correct because it is cryptographically provable”.
 
 ---
 
-### 2.4. Domain-Agnostic Trust Layer
+### 2.3. Device Lifecycle as a Protocol Concept
 
-Axis Protocol does not know about:
+Devices in Axis have an explicit **lifecycle**, rather than being an opaque external resource:
 
-- energy,
-- tokens,
+| Stage          | Description                                         |
+|----------------|-----------------------------------------------------|
+| **UNREGISTERED** | The device is unknown to the system.                 |
+| **REGISTERED**   | The device has a cryptographic identity.            |
+| **CLAIMED**      | The device is linked to a specific owner or tenant. |
+| **PROVISIONED**  | The device is configured and ready for operation.   |
+| **ACTIVE**       | The device is fully operational.                    |
+| **QUARANTINE**   | The device is suspected of malfunction or misbehavior. |
+| **MAINTENANCE**  | The device is undergoing maintenance.               |
+| **REVOKED**      | The device is permanently decommissioned.           |
+
+Concrete states and transitions can vary across domains and implementations. The key idea is that **the lifecycle is described by the protocol** (messages and rules), not left entirely to external proprietary systems.
+
+---
+
+### 2.4. Domain‑Agnostic Trust Layer
+
+Axis Protocol is intentionally **domain‑agnostic**. It does not “know” about:
+
+- energy markets,
+- DeFi and specific token models,
 - supply chains,
-- finance.
+- finance, etc.
 
-It knows only about:
+Instead, it works in terms of:
 
 - actors,
 - claims,
@@ -96,47 +96,52 @@ It knows only about:
 - proofs,
 - policies.
 
-This makes it a **foundational layer** for any domain that requires trust between physical and digital worlds.
+This makes Axis a **foundational trust layer** for any domain that needs strong guarantees between the physical and digital worlds.
 
 ---
 
-### 2.5. Governance as Protocol
+### 2.5. Protocol Evolution and Governance (Conceptual)
 
-Axis Protocol includes built-in governance:
+Axis Protocol assumes that it will evolve over time. To support that, it relies on:
 
-- ADR/RFC process for changes
-- Hybrid governance model (token holders + guardians)
-- On-chain anchoring of critical decisions
+- a formal process for proposing and documenting changes (e.g. ADRs / RFC‑like documents),
+- transparent recording of key architectural decisions,
+- the ability for different ecosystems to plug in their own governance mechanisms (token‑based voting, committees, operators, etc.).
 
-This ensures the protocol can evolve without relying on a single entity.
-
----
-
-## 3. Comparison: Web3 vs Axis (Web4)
-
-| Aspect | Web3 | Axis Protocol (Web4) |
-|--------|------|----------------------|
-| **Focus** | Digital assets | Physical + digital trust |
-| **Actors** | Wallets, contracts | Devices, organizations, services |
-| **Data** | On-chain state | Proven physical events |
-| **Trust** | Cryptographic consensus | Cryptographic identity + proof |
-| **Lifecycle** | Token lifecycle | Device lifecycle |
-| **Domain** | Finance, DeFi | Any domain (energy, mobility, etc.) |
-| **Governance** | Token voting | ADR/RFC + hybrid governance |
+The **exact governance mechanisms** (tokens, multisig, registries, audit logs, etc.) are **deployment choices** and are not part of the core protocol itself.  
+The protocol defines the language, invariants, and expectations — not a single mandatory governance model.
 
 ---
 
-## 4. Why This Matters
+## 3. Comparison: Classic Web3 vs Axis
 
-Axis Protocol bridges the gap between:
+| Aspect        | Web3                                   | Axis Protocol                               |
+|---------------|----------------------------------------|---------------------------------------------|
+| **Focus**     | Digital assets and state               | Trust across physical and digital domains   |
+| **Actors**    | Accounts, smart contracts              | Devices, organizations, services, users     |
+| **Data**      | On‑chain state                         | Cryptographically verifiable real‑world events |
+| **Trust**     | Consensus over digital state           | Identity + verifiable proofs + policies     |
+| **Lifecycle** | Token lifecycle                        | Device / entity lifecycle                   |
+| **Domain**    | Mainly finance / DeFi                  | Any domain (energy, mobility, logistics, etc.) |
+| **Governance**| Specific to each network implementation| ADR/RFC process + pluggable governance models |
 
-- **The physical world** (devices, energy, people)
-- **The digital world** (blockchains, tokens, smart contracts)
+---
+
+## 4. Why Axis Matters
+
+Axis Protocol connects:
+
+- **The physical world** (devices, infrastructure, processes, people),
+- **The digital world** (networks, ledgers, event logs, applications).
 
 It enables:
 
-- **Verifiable trust** — no central authority needed
-- **Decentralized infrastructure** — devices can participate directly
-- **Cross-domain interoperability** — the same protocol works for energy, mobility, supply chain, and more
+- **Verifiable trust** — without requiring a single central authority.
+- **Direct participation of devices** in distributed systems.
+- **Cross‑domain scenarios**, where the same protocol can be applied to energy, mobility, supply chains, and many other areas.
 
-This is the foundation for a **Web4** where physical and digital worlds are equally verifiable, equally decentralized, and equally trusted.
+This provides a foundation where physical and digital worlds become:
+
+- equally verifiable,
+- resilient to arbitrary unilateral changes,
+- and capable of participating together in shared processes and economies.

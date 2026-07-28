@@ -4,55 +4,66 @@
 
 Merkle Proof Verification is a cryptographic mechanism that allows proving membership of a manifest in a Merkle tree without downloading the entire tree. This is critical for:
 
-1. **Efficient Device Verification**: Devices can prove their manifest is registered without downloading all manifests
-2. **Scalability**: As the number of manifests grows, proof size remains O(log n)
-3. **Privacy**: Devices only expose their manifest content to verifiers, not all manifests
+1. **Efficient Device Verification**: Devices can prove their manifest is registered without downloading all manifests.
+2. **Scalability**: As the number of manifests grows, proof size remains O(log n).
+3. **Privacy**: Devices only expose their own manifest content to verifiers, not the full registry.
+
+Axis Protocol uses Merkle proofs as a generic building block. The protocol does not assume any specific blockchain platform, framework, or runtime. Any implementation MAY:
+
+- store Merkle roots on-chain or off-chain;
+- implement verification logic in smart contracts, trusted services, or secure enclaves;
+- choose any secure hash function family.
 
 ## Architecture
 
-### On-Chain Components
+### Verification Service / Smart Contract
 
-#### MerkleProofVerification Account
-Stores the result of a verified proof:
-```rust
-pub struct MerkleProofVerification {
-    pub registry: Pubkey,                    // Link to ManifestRegistry
-    pub manifest_verification: Pubkey,       // The verified manifest
-    pub verified_root: [u8; 32],            // Root against which proof was checked
-    pub verified_at: i64,                   // Timestamp
-    pub proof_length: u8,                   // Number of hashes in proof (efficiency metric)
-    pub verified_by: Pubkey,                // Who submitted the proof
+Implementations SHOULD provide a canonical verification interface. One possible abstract model is:
+
+```text
+struct MerkleProofVerificationResult {
+    registry_id:      bytes      // Identifier of the Manifest Registry
+    manifest_id:      bytes      // Identifier of the verified manifest
+    verified_root:    bytes      // Root against which proof was checked
+    verified_at:      timestamp  // When the proof was verified
+    proof_length:     uint8      // Number of hashes in the proof (efficiency metric)
+    verified_by:      bytes      // Identifier of the verifier (account, key, service)
 }
-```
+A generic verification function:
 
-#### Instruction: verify_merkle_proof
-```anchor
-pub fn verify_merkle_proof(
-    ctx: Context<VerifyMerkleProof>,
-    manifest_id: [u8; 16],
-    proof_path: Vec<[u8; 32]>,              // Sibling hashes from leaf to root
-    leaf_hash: [u8; 32],                    // Computed leaf hash
-) -> Result<()>
-```
+verify_merkle_proof(
+    manifest_id: bytes,
+    proof_path:  list<bytes>,   // Sibling hashes from leaf to root
+    leaf_hash:   bytes,         // Computed leaf hash
+    root:        bytes          // Expected Merkle root
+) -> MerkleProofVerificationResult | Error
+Concrete implementations MAY:
 
-### Off-Chain Flow
+expose this as a smart contract function;
+expose it via an API endpoint;
+embed it into a device-side trusted execution environment.
+Off-Chain Flow
+A typical flow combining off-chain registries and a verification service:
 
-1. **Off-chain registry** maintains manifests and computes Merkle tree
-2. **Oracle** creates Merkle snapshot and updates root on-chain
-3. **Device/Verifier** requests proof from registry
-4. **Device/Verifier** computes Merkle proof locally
-5. **Device/Verifier** submits proof to smart contract
-6. **Contract** stores verification result for future reference
+Off-chain registry maintains manifests and computes a Merkle tree over manifest identifiers or canonical manifest hashes.
+Snapshot publisher periodically creates Merkle snapshots and publishes Merkle roots (e.g., to a blockchain, an audit log, an append-only log, or a registry record).
+Device / Verifier requests a Merkle proof for a specific manifest from the registry.
+Device / Verifier computes or validates the Merkle proof locally.
+Device / Verifier submits the proof and expected root to the verification service (smart contract or API).
+Verification service validates the proof and stores the verification result for future reference or auditing.
+The protocol DOES NOT mandate where the verification happens — only that:
 
-## Usage Example
+the hashing scheme is well-defined and consistent;
+the tree construction rules are deterministic;
+proofs are verifiable by any conforming implementation.
+Usage Example (Off-Chain)
+The following example illustrates Merkle tree construction and proof generation off-chain. It is deliberately implementation-agnostic and can be adapted to any language or runtime.
 
-### 1. Create Merkle Tree (Off-chain)
+1. Create Merkle Tree (Off-chain)
+import crypto from "crypto";
 
-```typescript
-import * as keccak from "keccak";
-
-function sha256(data: Buffer): Buffer {
-  return keccak("keccak256").update(data).digest();
+function hash(data: Buffer): Buffer {
+  return crypto.createHash("sha256").update(data).digest();
 }
 
 const leaves = [
@@ -62,107 +73,119 @@ const leaves = [
 ];
 
 // Build tree bottom-up
-let currentLevel = leaves.map((leaf) => sha256(leaf));
+let currentLevel = leaves.map((leaf) => hash(leaf));
+
+const levels: Buffer[][] = [currentLevel]; // keep all levels if you need proofs
+
 while (currentLevel.length > 1) {
-  const nextLevel = [];
+  const nextLevel: Buffer[] = [];
   for (let i = 0; i < currentLevel.length; i += 2) {
     const left = currentLevel[i];
     const right = i + 1 < currentLevel.length ? currentLevel[i + 1] : left;
-    const parent = sha256(Buffer.concat([left, right]));
+    const parent = hash(Buffer.concat([left, right]));
     nextLevel.push(parent);
   }
   currentLevel = nextLevel;
+  levels.push(currentLevel);
 }
 
 const merkleRoot = currentLevel[0];
-```
+console.log("Merkle root:", merkleRoot.toString("hex"));
+2. Generate Proof for a Leaf
+type MerkleTreeLevels = Buffer[][]; // levels[0] = leaves, levels[levels.length-1] = root
 
-### 2. Generate Proof for a Leaf
-
-```typescript
-function getMerkleProof(tree, leafIndex) {
-  const proof = [];
+function getMerkleProof(levels: MerkleTreeLevels, leafIndex: number): Buffer[] {
+  const proof: Buffer[] = [];
   let index = leafIndex;
-  
-  for (const level of tree.levels) {
-    const sibling = index ^ 1;  // XOR to get sibling index
-    if (sibling < level.length) {
-      proof.push(level[sibling]);
+
+  for (let levelIndex = 0; levelIndex < levels.length - 1; levelIndex++) {
+    const level = levels[levelIndex];
+    const siblingIndex = index ^ 1; // XOR to get sibling index
+
+    if (siblingIndex < level.length) {
+      proof.push(level[siblingIndex]);
     }
+
     index = Math.floor(index / 2);
   }
-  
+
   return proof;
 }
 
 const leafIndex = 1;
-const proof = getMerkleProof(tree, leafIndex);
+const proof = getMerkleProof(levels, leafIndex);
 console.log(`Proof has ${proof.length} nodes`);
-```
+3. Verify a Proof (Generic)
+The same logic used on-chain or in a verification service:
 
-### 3. Verify on-chain
+function verifyMerkleProof(
+  leaf: Buffer,
+  proof: Buffer[],
+  expectedRoot: Buffer
+): boolean {
+  let computedHash = hash(leaf);
 
-```typescript
-const leafHash = sha256(leaves[leafIndex]);
+  for (const sibling of proof) {
+    // The concatenation order (left/right) MUST follow the tree construction rules.
+    // This simple example always concatenates [computedHash, sibling],
+    // but production implementations should encode the side (left/right) explicitly.
+    computedHash = hash(Buffer.concat([computedHash, sibling]));
+  }
 
-const tx = await program.methods
-  .verifyMerkleProof(
-    manifestId,        // [u8; 16]
-    proof,              // Vec<[u8; 32]>
-    [...leafHash]       // [u8; 32]
-  )
-  .accounts({
-    registry: registryPda,
-    manifestVerification: verificationPda,
-    proofVerification: proofVerificationPda,
-    verifier: wallet.publicKey,
-    systemProgram: SystemProgram.programId,
-  })
-  .rpc();
+  return computedHash.equals(expectedRoot);
+}
 
-console.log(`✅ Proof verified: ${tx}`);
-```
+const leafHash = hash(leaves[leafIndex]);
+const isValid = verifyMerkleProof(leafHash, proof, merkleRoot);
 
-## Security Properties
+console.log(`Proof valid: ${isValid}`);
+In a concrete Axis-compatible implementation, this verification logic MAY be:
 
-### Completeness
-Valid proofs are always accepted (if root matches).
+embedded in a smart contract;
+provided as an external verification service;
+run directly on the device or verifier.
+Security Properties
+Completeness
+Valid proofs are always accepted (assuming the expected root is correct and matches the published Merkle root).
 
-### Soundness
-Invalid proofs are always rejected. An attacker cannot forge a valid proof without:
-1. Knowing the exact leaf value
-2. Having valid sibling hashes for the entire path
+Soundness
+Invalid proofs are rejected. An attacker cannot forge a valid proof without:
 
-### Efficiency
-- **Proof Size**: O(log n) hashes (e.g., ~256 bytes for 2^64 leaves)
-- **Verification Time**: O(log n) hashes
-- **Storage**: One-time proof verification result per manifest
+Knowing the exact leaf value or being able to collide with it under the chosen hash function.
+Having valid sibling hashes for the entire path from leaf to root.
+The security properties depend on:
 
-## Testing
+the collision resistance and preimage resistance of the hash function;
+the integrity of the published Merkle root (e.g., how it is anchored or distributed).
+Efficiency
+Proof Size: O(log n) hashes (e.g., logarithmic in the number of manifests).
+Verification Time: O(log n) hash operations.
+Storage: A verification service MAY store a single verification record per manifest and per snapshot.
+Testing
+Implementations SHOULD provide automated tests that:
 
-### Local Test
-```bash
-npm run test -- tests/merkle-proof-verification.test.ts
-```
+Construct Merkle trees from known test vectors.
+Generate proofs for specific leaves.
+Verify proofs against known roots (both positive and negative cases).
+Validate behavior for edge cases (single leaf, odd number of leaves, deep trees).
+Example (JavaScript/TypeScript):
 
-### Devnet Test
-```bash
-ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
-ANCHOR_WALLET=~/.config/solana/id.json \
-npm run test -- tests/devnet-merkle-proof-verification.test.ts
-```
+npm test
+or any equivalent command in your language/framework of choice.
 
-## Integration with Device Lifecycle
-
+Integration with Device Lifecycle
 Devices use Merkle proofs in several scenarios:
 
-1. **Boot-time Verification**: Device proves its manifest is current
-2. **Firmware Update**: Device verifies new firmware manifest before installation
-3. **Attestation**: Device proves it has an approved manifest for remote verifiers
+Boot-time Verification: A device proves that its current manifest is included in the approved manifest set.
+Firmware Update: Before installing new firmware, a device verifies that the firmware manifest is included in an approved release set.
+Attestation: A device presents a Merkle proof to remote verifiers to demonstrate that it runs an approved manifest.
+Implementations MAY combine Merkle proofs with:
 
-## Future Enhancements
-
-1. **Batch Proof Verification**: Multiple proofs in one transaction
-2. **Proof Caching**: On-chain cache of verified proofs to reduce repeats
-3. **Negative Proofs**: Prove that a manifest is NOT in the tree (for quarantine)
-4. **Light Client Support**: Optimize for resource-constrained devices
+signed manifests;
+attestation tokens;
+on-chain or off-chain registries.
+Future Enhancements
+Batch Proof Verification: Verify multiple proofs in a single request or transaction.
+Proof Caching: Cache verified proofs (or their digests) to reduce repeated verification costs.
+Negative Proofs: Mechanisms to prove that a manifest is NOT part of a set (e.g., for quarantine or revocation).
+Light Client Support: Optimize verification flows for resource-constrained devices using light clients or delegated verification.

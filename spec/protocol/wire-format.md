@@ -1,170 +1,316 @@
-# Axis Protocol — Wire Format
+# Axis Protocol – Wire Format Specification
 
-This document specifies how Axis Records are **serialized**, **hashed** and **addressed** on the wire.
+This document defines the on‑wire representation of Axis Protocol messages.  
+It is intentionally **implementation‑neutral** and does not assume any specific runtime, blockchain, or smart‑contract framework.
 
-Goal: the same logical Record must have a **unique canonical representation** and therefore a **stable hash** across implementations.
-
-> NOTE: This is a draft; concrete encoding choices (e.g. JSON vs CBOR) are subject to change as long as the canonicalization rules remain well‑defined.
-
----
-
-## 1. Canonical representation
-
-### 1.1 Requirements
-
-A canonical representation MUST:
-
-- be **unambiguous** (no two different byte sequences for the same logical Record);
-- be **deterministic** (independent of field ordering at the API level);
-- be **portable** across languages and platforms.
-
-### 1.2 Encoding
-
-Axis defines a logical JSON‑like structure, but the canonical on‑wire encoding MAY be:
-
-- JSON with strict canonicalization rules; or
-- CBOR with deterministic encoding; or
-- another self‑describing structured format with deterministic rules.
-
-Normative (for this draft):
-
-- Implementations MUST choose one canonical encoding and document it.
-- All hash calculations and signatures MUST use this canonical encoding.
-- If multiple encodings are supported for transport, they MUST be losslessly convertible to/from the canonical form.
-
-> A future version of the spec may fix a single mandatory canonical encoding for interoperability test suites.
+> Axis Protocol defines *what* is sent over the wire.  
+> Concrete implementations (e.g. Axis Core or other runtimes) define *how* these bytes are produced, transported and persisted.
 
 ---
 
-## 2. Canonical JSON (draft baseline)
+## 1. Design goals
 
-This section defines a **baseline canonical JSON representation** suitable for early implementations and tests.
+The wire format is designed to be:
 
-### 2.1 Object ordering
+- **Deterministic** – the same logical message must always serialize to the same byte sequence.
+- **Versioned** – messages are self‑describing and can evolve over time.
+- **Binary and compact** – suitable for constrained networks and devices.
+- **Language‑agnostic** – implementable in any language/runtime.
+- **Extensible** – fields and message types can be extended in backward‑compatible ways.
 
-- JSON objects MUST have their keys sorted in **lexicographic order**.
-- No duplicate keys are allowed.
+This specification uses an abstract description of fields and types.  
+Concrete encodings (e.g. for integers or byte arrays) are defined in the **Primitive Types** section.
 
-### 2.2 Numbers
+---
 
-- Integer values MUST be encoded without leading zeros (except zero itself).
-- Floating‑point values SHOULD be avoided in canonical data where possible. If used:
-  - they MUST be encoded in a normalized decimal representation without trailing zeros, or
-  - implementations MAY agree on IEEE‑754 binary representation wrapped in a string.
+## 2. Message envelope
 
-Domain profiles SHOULD prefer integer or fixed‑point representations for quantities.
+Every Axis Protocol message is encoded as a **Message Envelope**. The envelope wraps a concrete message payload (command, event, query, response, etc.) and provides a consistent framing.
 
-### 2.3 Strings and encoding
+### 2.1. Envelope structure
 
-- Strings MUST be valid UTF‑8.
-- Control characters MUST be escaped using standard JSON escapes.
-- No insignificant whitespace is allowed outside strings.
+```text
++----------------------+----------------------+-----------------------+
+|  Envelope Header     |  Message Header      |  Message Payload      |
++----------------------+----------------------+-----------------------+
+In logical terms:
 
-### 2.4 Example record (logical)
-
-```json
-{
-  "header": {
-    "issuer": "did:example:issuer1",
-    "namespace": "axis://protocol",
-    "timestamp": "2025-01-01T00:00:00Z",
-    "version": "0.1.0"
-  },
-  "body": {
-    "claims": [
-      {
-        "asset_id": "asset:example:meter-1",
-        "claim_type": "axis://protocol/production",
-        "payload": {
-          "quantity_wh": 1000,
-          "interval": {
-            "from": "2025-01-01T00:00:00Z",
-            "to": "2025-01-01T01:00:00Z"
-          }
-        }
-      }
-    ]
-  },
-  "signatures": [
-    {
-      "alg": "Ed25519",
-      "kid": "did:example:issuer1#key-1",
-      "sig": "<base64-signature>"
-    }
-  ]
+Envelope {
+    envelope_version: u8,
+    transport_id: TransportId,
+    correlation_id: CorrelationId,
+    message_header: MessageHeader,
+    message_payload: MessagePayload,
 }
-The canonical byte sequence is obtained by serializing this structure using the canonical JSON rules above.
+Fields:
 
-3. Hashing and record identifiers
-3.1 Hash function
-Implementations MUST use a cryptographic hash function (e.g. SHA‑256 or BLAKE3) for record identifiers.
+envelope_version (u8)
+Version of the envelope format. This document specifies version 1.
 
-The specific function MUST be declared by the implementation or profile.
+transport_id (TransportId)
+Identifies the transport or channel over which the message is carried.
+The protocol does not require any particular transport; this field allows implementations to:
 
-Different profiles MAY choose different functions, as long as they are clearly identified.
+multiplex messages over multiple logical channels,
+support multiple backends in the same deployment.
+correlation_id (CorrelationId)
+Opaque identifier used to correlate requests and responses, or link related messages in a workflow.
 
-The choice of hash function is not fixed by the core spec; conformance suites MAY apply stricter requirements.
+message_header (MessageHeader)
+Describes type, version and basic routing information for the payload.
 
-3.2 Record ID
-A Record ID is derived as follows:
+message_payload (MessagePayload)
+Type‑specific body of the message (command, event, query, response, notification, etc.).
 
-Take the canonical byte sequence of the Record without the record_id field (if present).
+Implementations MUST validate that envelope_version is supported before attempting to parse the remainder of the message.
 
-Compute the hash using the chosen hash function.
+3. Message header
+The Message Header provides the minimal metadata required to correctly interpret the payload.
 
-Encode the hash in a standard textual form (e.g. hex, base58, base64url) with an optional prefix.
+Logical structure:
 
-Example (logical):
+MessageHeader {
+    message_type: MessageType,
+    message_version: u16,
+    domain: DomainId,
+    entity_type: EntityTypeId,
+    entity_id: EntityId,
+    timestamp: Timestamp,
+}
+Fields:
 
-text
-hash = sha256(canonical_bytes(record_without_record_id))
-textual ID: axrec:<base58-of-hash>
-Normative:
+message_type (MessageType)
+High‑level classification of the message. See Section 4.
 
-The record_id field, if present, MUST match the computed identifier for the Record.
+message_version (u16)
+Version of the logical message schema.
+This allows evolution of individual message types without changing the envelope version.
 
-If a transport or storage layer assigns additional identifiers, they MUST NOT replace the canonical record_id defined here.
+domain (DomainId)
+Identifies the application or business domain (e.g. “energy”, “asset‑tracking”, “payments”).
+Axis Protocol does not prescribe any fixed domains; values are deployment‑specific.
 
-4. References and links
-Records and Claims MAY reference:
+entity_type (EntityTypeId)
+Logical type of the entity the message refers to (e.g. “Device”, “MeterReading”, “Contract”).
 
-other Records (by record_id);
+entity_id (EntityId)
+Stable identifier of the specific entity instance (e.g. device serial number or application‑level ID).
 
-assets (by asset identifier);
+timestamp (Timestamp)
+Time at which the message was created, in a deployment‑defined time base (see Primitive Types).
 
-policies or profiles (by namespaced identifiers).
+4. Message types
+MessageType is an enumeration describing the role of the message in the system.
 
-Normative:
+Recommended base set:
 
-References MUST be stable, i.e. they MUST NOT depend on mutable off‑chain database primary keys.
+enum MessageType (u8) {
+    Command        = 0x01,
+    Event          = 0x02,
+    Query          = 0x03,
+    QueryResponse  = 0x04,
+    Notification   = 0x05,
+    Acknowledgment = 0x06,
+    Error          = 0x07,
+    ReservedStart  = 0x80, // implementation-specific extensions >= 0x80
+}
+Semantics:
 
-When referencing another Record, the canonical Record ID MUST be used.
+Command
+Asks the system to perform an action that may change state.
 
-5. Extensibility
-The wire format is designed to be extensible:
+Event
+Represents a fact that has already occurred; typically emitted as part of state changes.
 
-Additional fields MAY be added to:
+Query
+Request for information that should not change state.
 
-headers,
+QueryResponse
+Response data for a specific Query (correlated via correlation_id).
 
-claims,
+Notification
+Out‑of‑band information that may be delivered without a corresponding request.
 
-signatures,
+Acknowledgment
+Lightweight confirmation that a message has been received and accepted for processing.
 
-policy references.
+Error
+Indicates that a previous request could not be processed successfully.
 
-Constraints:
+Implementations MAY define additional message types using values in the extension range (>= 0x80), but MUST NOT reuse or redefine base values.
 
-New fields MUST NOT break canonicalization rules.
+5. Message payloads
+The payload is defined by the combination of message_type, domain, entity_type and message_version.
+This specification describes the envelope and header; concrete deployments define their own message schemas on top of this structure.
 
-Unknown fields MUST be ignored by validators that do not understand them, unless a profile explicitly forbids this.
+5.1. Namespacing and versioning
+Each payload schema SHOULD be uniquely identified by:
 
-Profiles MAY:
+domain
+entity_type
+message_type
+message_version
+Example logical identity:
 
-restrict which fields are allowed;
+(domain = "energy.metering",
+ entity_type = "Meter",
+ message_type = Command,
+ message_version = 1)
+Implementations MUST ensure:
 
-require certain fields to be present;
+A given identity maps to exactly one field layout and encoding.
+Message consumers validate message_version and reject unsupported schemas.
+5.2. Encoding requirements
+Payloads MUST obey:
 
-define additional canonicalization constraints.
+Deterministic field order
+Fields are encoded in a predefined, documented order.
 
-Such constraints MUST NOT contradict the core rules in this document.
+No implicit defaults
+If a field is required, it MUST appear in the payload encoding; defaulting is a schema‑level concern.
+
+Explicit optionality
+Optional fields SHOULD be encoded using:
+
+a presence bitmap, or
+a tagged union / variant type, or
+nullable semantics, depending on the chosen primitive encoding.
+Forward compatibility
+
+Receivers MUST ignore unknown fields that are explicitly allowed by the encoding scheme (e.g. length‑delimited structures).
+New fields are typically added at the end of the field order for a given message_version.
+The exact rules for field tagging (if any), length prefixes and variant encodings are defined by the chosen serialization within the guidelines of this wire format (see Primitive Types).
+
+6. Primitive types
+This section defines abstract primitive types used throughout the wire format.
+Concrete implementations MUST document how these map to their chosen binary encodings.
+
+6.1. Integer types
+Recommended logical set:
+
+u8, u16, u32, u64 – unsigned integers.
+i32, i64 – signed integers where needed.
+Encoding rules:
+
+Implementations MAY choose fixed‑width big‑endian or little‑endian encodings.
+Alternatively, variable‑length integer encodings (e.g. LEB128) MAY be used, but MUST be applied consistently within a deployment and documented.
+6.2. Boolean
+Logical type:
+
+bool – encoded as a single byte (0x00 = false, 0x01 = true) or a packed bit in a bitmap.
+The chosen representation MUST be consistent across a deployment.
+
+6.3. Byte arrays
+Logical type:
+
+bytes – arbitrary byte sequence.
+Encoding:
+
+Length (u32 or varint) + raw bytes
+The integer type used for Length MUST be documented for each deployment.
+
+6.4. Text strings
+Logical type:
+
+string – UTF‑8 encoded text.
+Encoding:
+
+Length (u32 or varint) + UTF-8 bytes
+Strings MUST be valid UTF‑8; invalid sequences MUST cause validation failure.
+
+6.5. Identifiers
+The following logical identifiers are used in the envelope and header:
+
+TransportId
+CorrelationId
+DomainId
+EntityTypeId
+EntityId
+Each identifier MAY be represented as:
+
+a string (human‑readable, flexible), or
+a bytes value (compact, opaque), or
+a fixed‑width integer, as defined by the deployment.
+Implementations MUST:
+
+Choose and document a specific representation for each identifier type.
+Treat identifiers as opaque at the wire level (no semantic parsing is required by the core protocol).
+6.6. Timestamp
+Logical type:
+
+Timestamp – a point in time.
+Recommended representation:
+
+i64 or u64 counting:
+seconds since Unix epoch, or
+milliseconds/microseconds since Unix epoch.
+The exact epoch and time unit MUST be documented by the deployment.
+Timestamps MUST be interpreted in UTC at the protocol level.
+
+7. Framing and boundaries
+Axis Protocol assumes that messages are carried by some underlying transport (e.g. TCP, message queue, event log, smart‑contract calls, etc.), but does not prescribe any specific one.
+
+There are two recommended approaches to framing:
+
+Length‑prefixed messages
+
+MessageLength (u32 or varint) + EnvelopeBytes
+Simple to implement.
+Suitable for stream‑oriented transports.
+Delimited records
+
+Messages are stored or transmitted as discrete records.
+The record boundary implicitly defines the envelope boundary.
+Each deployment MUST specify:
+
+Which framing strategy is used.
+The integer type used for MessageLength if applicable.
+Any maximum message size limits.
+8. Error handling and validation on the wire
+Implementations MUST perform basic validation before accepting a message for higher‑level processing:
+
+Envelope validation
+
+Check envelope_version is supported.
+Verify message length and structural integrity.
+Validate that message_type is known or safely ignorable.
+Header validation
+
+Ensure that required header fields are present and correctly typed.
+Validate that message_version is supported for the given domain, entity_type and message_type.
+Payload validation (structural)
+
+Validate that the payload conforms to the encoding rules for the specific schema.
+Deep semantic validation rules are defined in the validation layer, not the wire format.
+On validation failure, implementations SHOULD:
+
+Reject the message, and
+Optionally emit an Error message correlated to the original correlation_id, if that is meaningful for the transport and application.
+9. Extensibility
+Axis Protocol wire format is designed to allow incremental extension without breaking existing deployments.
+
+9.1. Backward‑compatible changes
+The following changes are generally considered backward‑compatible when carefully applied:
+
+Adding new message types in the extension range (>= 0x80).
+Adding new optional fields to payloads in a way that older decoders can ignore.
+Introducing new domains or entity types.
+9.2. Breaking changes
+The following changes are breaking and MUST NOT be introduced without coordination and versioning:
+
+Changing the meaning or encoding of existing fields.
+Reusing numeric codes for MessageType with different semantics.
+Changing the format of identifiers or timestamps without versioning.
+When breaking changes are unavoidable, they MUST be accompanied by:
+
+A new envelope_version, or
+A new message_version for the affected messages, or
+A new domain/entity namespace, as appropriate.
+10. Relationship to implementations
+Axis Protocol defines the abstract wire format described in this document.
+Axis Core (or other runtimes) MAY provide:
+concrete binary encodings for all primitive types,
+code libraries for serialization/deserialization,
+integration with specific transports or ledgers.
+Implementations MUST treat this document as the normative source of truth for the structure of on‑wire messages.
+Any implementation‑specific optimizations or shortcuts MUST remain compatible with this specification.
