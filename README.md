@@ -1,134 +1,141 @@
 # Axis Protocol
 
-Axis Protocol is a **specification for structured, deterministic messaging** between devices, services and domains.  
-It defines how to represent commands, events and queries in a way that is:
+Axis Protocol is an **overlay trust standard** — a domain-agnostic language of trust between physical devices and digital systems.
 
-- **Implementation‑neutral** – not tied to any specific blockchain, database, runtime or smart‑contract framework.
-- **Deterministic** – the same logical message yields the same serialized form and the same validation outcome.
-- **Domain‑agnostic** – applicable to energy, IoT, supply‑chain, finance and other domains.
-- **Extensible** – designed to evolve without breaking existing deployments.
+It defines how devices and digital systems establish, exchange, and verify trust without relying on any specific blockchain, platform, or vendor.
 
-This repository contains the **core specifications** of Axis Protocol (wire format, validation rules, lifecycles and related documents).
+This repository contains the **core specifications** of Axis Protocol (trust model, wire format, validation rules, lifecycles, and related documents).
 
-Concrete runtimes (such as **Axis Core** or others) can implement these specifications and add domain‑specific behavior.
+---
+
+## Philosophy
+
+The foundational philosophy of the Axis Protocol is captured in the **Architecture Book**:
+
+- [Prologue](docs/philosophy/architecture/00_Prologue.md) — Introduction to the vision
+- [Chapter 1](docs/philosophy/architecture/01_The_Birth_of_an_Idea.md) — How it all began
+- [Chapter 2](docs/philosophy/architecture/02_When_a_Token_Was_No_Longer_Enough.md) — Moving beyond tokens
+- [Chapter 3](docs/philosophy/architecture/03_When_the_Protocol_Became_More_Important_than_the_Project.md) — Protocol over project
+- [Chapter 4](docs/philosophy/architecture/04_Architecture_Is_Born_Before_the_Code.md) — Architecture first
+- [Chapter 5](docs/philosophy/architecture/05_The_First_Law_of_Trust.md) — The first law of trust
+- [Epilogue](docs/philosophy/architecture/06_Epilogue.md) — Where the journey leads
 
 ---
 
 ## Repository structure
 
-High‑level structure:
-
 ```text
 Axis-protocol/
   spec/
+    overview.md            # High-level overview of the protocol
     protocol/
-      wire-format.md       # Wire-level message envelope and primitive types
-      validation.md        # Validation model and protocol-level invariants
-      lifecycle.md         # Entity and message lifecycle patterns
-    adr/                   # Architecture Decision Records related to the protocol
+      README.md            # Core specification index
+      model.md             # Trust model and entities
+      wire-format.md       # Wire format and serialization
+      validation.md        # Validation rules
+      lifecycle.md         # Lifecycle of trust entities
   docs/
-    README.md              # Documentation index and usage guidance
-    ...                    # Additional explanatory documents
-  LICENSE
+    README.md              # Documentation index
+    Axis-Protocol-*.md     # One-Pager, Overview, Specification, Terminology
+    philosophy/            # Architecture Book (6 chapters + Epilogue)
+    platform/              # Device lifecycle, provisioning
+  adr/                     # Architecture Decision Records (9 ADRs)
+  LICENSE                  # Apache 2.0
+  NOTICE                   # Attribution
   README.md                # This file
 The spec/ directory is the normative source for the protocol definition.
-Everything else (docs, examples, reference implementations) is informative or illustrative.
+Everything else (docs/, adr/, examples) is informative or illustrative.
 
-Axis Protocol vs implementations
-Axis Protocol aims to clearly separate:
+Axis Protocol vs Implementations
+Axis Protocol clearly separates:
 
-Protocol layer (this repo) – what a conforming message is and what invariants hold.
-Implementation layer (separate repos) – how messages are produced, transported, stored and executed in specific environments.
+Protocol layer (this repository) — what a conforming message is and what invariants hold.
+
+Implementation layer (separate repositories) — how messages are produced, transported, stored, and executed in specific environments.
+
 Examples of implementation roles (non‑exclusive, non‑normative):
 
-Axis Core – a reference implementation that:
+Axis Core — a reference implementation that provides serialization/deserialization libraries, enforces validation rules, and integrates with specific transports or ledgers.
 
-provides serialization/deserialization libraries,
-enforces validation rules from this repository,
-integrates with specific transports or ledgers (configurable per deployment).
-Other runtimes – independent implementations in different languages or platforms that:
+Other runtimes — independent implementations in different languages or platforms that consume and produce Axis‑conformant messages.
 
-consume and produce Axis‑conformant messages,
-embed the protocol in existing infrastructures (databases, message buses, blockchains, etc).
 Implementations SHOULD treat the specifications in spec/ as normative and document any additional constraints they introduce.
 
-Getting started
+Getting Started
 There are two main ways to work with Axis Protocol:
 
-As a protocol author / domain designer
-You define domain‑specific schemas and rules on top of Axis.
+As a protocol author / domain designer — define domain‑specific schemas and rules on top of Axis.
 
-As an implementer
-You implement serialization, validation and execution for Axis messages in a particular runtime.
+As an implementer — implement serialization, validation, and execution for Axis messages in a particular runtime.
 
 1. Read the core specifications
 Start with the protocol documents:
 
-spec/protocol/wire-format.md
-Structure of the on‑wire message envelope, primitive types and framing guidelines.
+spec/protocol/README.md — overview of the core specification.
 
-spec/protocol/validation.md
-Validation layers (structural, semantic, state‑dependent) and protocol‑level invariants.
+spec/protocol/model.md — trust model and entities.
 
-spec/protocol/lifecycle.md
-Recommended patterns for entity and message lifecycles across domains.
+spec/protocol/wire-format.md — wire format and serialization.
 
-These documents are implementation‑neutral and form the core of Axis Protocol.
+spec/protocol/validation.md — validation rules.
+
+spec/protocol/lifecycle.md — lifecycle of trust entities.
 
 2. Explore architecture decisions
 Axis Protocol uses Architecture Decision Records (ADRs) to capture key design choices and their rationale.
 
-See:
-
-spec/adr/ – a set of ADRs describing the evolution of the protocol.
-ADRs are informative but strongly recommended reading if you intend to extend the protocol or build new implementations.
+See: adr/ — a set of ADRs describing the evolution of the protocol.
 
 3. Check additional documentation
-The docs/ directory provides additional guidance, such as:
+The docs/ directory provides additional guidance, such as conceptual overviews, domain modeling examples, and implementation notes.
 
-conceptual overviews of Axis Protocol,
-examples of domain modeling on top of Axis,
-implementation notes and integration guides.
-See docs/README.md for an index and entry points.
+See: docs/README.md for an index and entry points.
 
-Using Axis Protocol in your project
+Using Axis Protocol in Your Project
 Axis Protocol is designed to be embedded into a wide range of systems. Typical usage patterns:
 
-Device / edge integration
+Device / edge integration — devices emit Axis‑formatted events and respond to Axis‑formatted commands. Gateways or cloud services validate and process these messages.
 
-Devices emit Axis‑formatted events and respond to Axis‑formatted commands.
-Gateways or cloud services validate and process these messages.
-Backend / service integration
+Backend / service integration — microservices communicate via a message bus using Axis messages as a shared contract. Validation and lifecycle rules ensure consistent behavior across services.
 
-Microservices communicate via a message bus using Axis messages as a shared contract.
-Validation and lifecycle rules ensure consistent behavior across services.
-Ledger / log integration
+Ledger / log integration — systems append Axis messages to an append‑only log, event store, or ledger. Consumers rebuild state by replaying validated messages.
 
-Systems append Axis messages to an append‑only log, event store or ledger.
-Consumers rebuild state by replaying validated messages.
 To adopt Axis Protocol, you typically:
 
-Define your domains, entity types and message schemas on top of the core spec.
-Choose or build an implementation (e.g. use Axis Core or another runtime).
-Integrate Axis validation and serialization into your device, service or application code.
-Conformance and compatibility
+Define your domains, entity types, and message schemas on top of the core spec.
+
+Choose or build an implementation (e.g., use Axis Core or another runtime).
+
+Integrate Axis validation and serialization into your device, service, or application code.
+
+Conformance and Compatibility
 An implementation claims conformance to Axis Protocol if it:
 
 Correctly implements the wire format as specified in spec/protocol/wire-format.md.
-Enforces at least the structural validation rules in spec/protocol/validation.md.
-Applies semantic and state‑dependent validation consistently according to its domain specifications.
-Maintains deterministic behavior: given the same inputs and configuration, different implementations reach equivalent decisions and outcomes.
-Profiles or deployments MAY introduce stricter rules (e.g. tighter validation, specific transports, particular authorization models) but MUST NOT contradict the core specifications.
 
-Roadmap and evolution
+Enforces at least the structural and cryptographic validation rules in spec/protocol/validation.md.
+
+Applies semantic and state‑dependent validation consistently according to its domain specifications.
+
+Maintains deterministic behavior: given the same inputs and configuration, different implementations reach equivalent decisions and outcomes.
+
+Profiles or deployments MAY introduce stricter rules but MUST NOT contradict the core specifications.
+
+Roadmap and Evolution
 Axis Protocol is expected to evolve over time. Changes are governed by:
 
 Updates to the core specifications in spec/.
-New or updated ADRs in spec/adr/.
+
+New or updated ADRs in adr/.
+
 Versioning of:
+
 the envelope format (envelope_version),
+
 individual message schemas (message_version),
+
 and optionally domain‑specific profiles.
+
 Backward‑compatible changes are preferred. Breaking changes are introduced only with clear versioning and migration guidance.
 
 Contributing
@@ -137,15 +144,20 @@ Contributions to the Axis Protocol specifications are welcome.
 Typical contribution types:
 
 Clarifications or improvements to existing documents.
+
 New ADRs proposing protocol‑level changes.
+
 Corrections to inconsistencies or ambiguities.
+
 Additional examples or explanatory docs in docs/.
+
 To propose a change:
 
 Open an issue describing the problem or proposal.
-If the change is substantial, consider drafting an ADR under spec/adr/.
+
+If the change is substantial, consider drafting an ADR under adr/.
+
 Submit a pull request with the proposed edits.
-Maintainers use ADRs and review discussions to ensure that the protocol remains coherent and implementation‑neutral.
 
 License
 Unless otherwise noted, the contents of this repository are licensed under the terms specified in LICENSE.
