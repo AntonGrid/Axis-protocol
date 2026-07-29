@@ -1,76 +1,77 @@
 # Axis Protocol — Core Specification
 
-This directory contains the **core, implementation- and blockchain-agnostic specification** of the Axis protocol.
+This directory contains the **core specification** of Axis Protocol — an **overlay trust standard** that defines how physical devices and digital systems establish, exchange, and verify trust without relying on any specific blockchain, platform, or vendor.
 
-- It MUST stay independent from any particular chain, runtime, product, or implementation.
-- It defines the **conceptual model**, **wire format**, **validation rules**, and **lifecycle semantics**.
-- All chain-, infrastructure-, or application-specific details (particular blockchains, runtimes, or domains) belong in separate documents/repositories.
+It is **not a blockchain protocol**.  
+It is **not an application**.  
+It is **not tied to energy, IoT, or any specific domain**.
+
+Axis Protocol is the **language of trust** between the physical and digital worlds.
+
+---
 
 ## Scope
 
-Axis is a protocol for representing and exchanging **stateful claims** about real‑world or digital assets in a verifiable, portable way.
+The core specification defines:
 
-The core spec covers:
+- **Identity** — how devices obtain cryptographic identities.
+- **Registry** — how identities and states are recorded and verified.
+- **Proof** — how devices prove that events occurred.
+- **Verification** — how proofs are validated by independent parties.
+- **Trust Transfer** — how trust moves from the physical world to the digital world — and back.
 
-- **Conceptual model**:
-  - actors and identities;
-  - assets and claims;
-  - records, events, and logs;
-  - namespaces and versioning.
-- **Wire format**:
-  - canonical serialization of records;
-  - hashing and content addressing;
-  - references and linking.
-- **Validation**:
-  - structural validation;
-  - semantic validation (policies, constraints);
-  - versioning and compatibility rules.
-- **Lifecycle**:
-  - creation and evolution of claims;
-  - revocation, supersession, expiration;
-  - conflict resolution and merging.
+All other concerns — storage, execution, tokenization, domain-specific logic — are outside the scope of this specification.
 
-Out of scope for this directory:
+---
 
-- smart‑contract layouts on any chain;
-- gas/fees, transaction formats, RPC details;
-- application‑ or product‑specific business logic, market rules, or pricing;
-- domain‑specific modeling (e.g. energy, supply chain, identity) beyond what is required by the generic model.
+## What This Specification Does Not Define
 
-Bindings to specific execution or storage environments (e.g., particular blockchains or ledgers) are defined in separate documents under `spec/bindings/`. Domain- or application-specific **profiles** MUST live outside this directory.
+- **Storage** — no blockchain, database, or persistence model is assumed.
+- **Execution** — no smart contracts, off-chain services, or transaction models are assumed.
+- **Domain Logic** — no energy, supply chain, identity, or other vertical logic is defined.
+- **Implementation** — no reference code, SDKs, or deployment models are specified.
 
-## Structure
+These belong in implementations (like Axis Core) and applications (like domain-specific profiles).
 
-- [`model.md`](./model.md) — core conceptual model (actors, assets, claims, records).
-- [`wire-format.md`](./wire-format.md) — canonical on‑wire representation.
-- [`validation.md`](./validation.md) — validation rules and policy model.
-- [`lifecycle.md`](./lifecycle.md) — lifecycle and state transitions.
+---
 
-Future additions (optional, not yet finalised):
+## Core Documents
 
-- `security.md` — security, threat model, and trust assumptions.
-- `glossary.md` — glossary of core terms.
-- `examples/` — domain-neutral examples and test vectors.
+| Document | Description |
+| :--- | :--- |
+| [`model.md`](./model.md) | Core data model: entities, relationships, and trust graph. |
+| [`wire-format.md`](./wire-format.md) | Canonical message format and serialization rules. |
+| [`validation.md`](./validation.md) | Validation pipeline, rules, and policy model. |
+| [`lifecycle.md`](./lifecycle.md) | Lifecycle of entities, events, and trust relationships. |
 
-## Design principles
+---
 
-The Axis protocol is designed with the following principles:
+## Design Principles
 
-1. **Chain‑agnostic & infrastructure‑agnostic**  
-   The protocol must be implementable on multiple chains, off‑chain systems, or hybrid setups.
+1. **Trust Over Technology**
+   - Trust is the primary concern. Technology is a means to achieve it.
 
-2. **Deterministic & canonical**  
-   The same logical record must have a unique canonical representation and hash across implementations.
+2. **Identity is Cryptographic**
+   - Every device has its own identity. Private keys never leave the device.
 
-3. **Minimal core, extensible edges**  
-   The core spec defines a *small, stable* set of primitives that can be safely extended by domains (e.g., energy, identity, supply chain, IoT) via separate profiles.
+3. **Proof is Verifiable**
+   - Every event is cryptographically proven. Verification does not depend on a trusted third party.
 
-4. **Separation of concerns**  
-   - Protocol spec: what a valid Axis record is and how it behaves.
-   - Implementations: how records are stored, executed, or transacted.
+4. **Registry is Canonical**
+   - Device identity, state, and history are maintained in a verifiable registry.
 
-5. **Human‑readable, machine‑checkable**  
-   The spec should be readable by humans and strict enough to derive reference tests and validators.
+5. **Protocol is Neutral**
+   - No dependency on any blockchain, platform, vendor, or domain.
+
+---
+
+## Relationship to Other Repositories
+
+- **Axis Protocol** (this repository) — the **normative specification** of the trust standard.
+- **Axis Core** — a **platform-agnostic reference implementation** of the protocol.
+- **Domain Applications** — specific applications built on the protocol (e.g., energy tokenization, supply chain tracking, etc.).
+
+---
 
 ## Versioning
 
@@ -81,4 +82,4 @@ This directory describes **Axis Protocol v0.x (draft)**.
   - the **Axis protocol version** they support;
   - any **extensions** or **profiles** they rely on.
 
-> Implementation‑specific ADRs and architecture documents MUST live outside this directory (e.g., in `docs/` or in implementation repos such as Axis‑core or domain‑specific projects).
+> Implementation‑specific ADRs and architecture documents MUST live outside this directory (e.g., in `docs/` or in implementation repositories).

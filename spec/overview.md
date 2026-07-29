@@ -1,93 +1,122 @@
-# Axis Protocol Overview
+# Axis Protocol — The Trust Standard
 
-Axis Protocol is a layer-above-consensus, domain-agnostic standard for representing, exchanging, and validating **claims, attestations, and asset state** in a highly composable way.
+Axis Protocol is an **overlay trust standard** that defines how physical devices and digital systems establish, exchange, and verify trust without relying on any specific blockchain, platform, or vendor.
 
-Axis does **not** define a new blockchain or consensus mechanism. Instead, it specifies a **unified trust layer** that can be implemented on top of different persistence and settlement systems (blockchains, ledgers, or even conventional databases), while keeping:
+It is **not a blockchain protocol**.  
+It is **not an application**.  
+It is **not tied to energy, IoT, or any specific domain**.
 
-- A consistent **data model** for claims, assets, and attestations
-- A canonical **wire format** for signed envelopes
-- A shared **validation pipeline** and semantics
-- A standard **lifecycle** for key protocol entities
+Axis Protocol is the **language of trust** between the physical and digital worlds.
 
-The goal is to make trust statements machine-verifiable, portable across implementations, and independent from any concrete L1 / L2 environment.
+---
+
+## What Axis Protocol Is
+
+Axis Protocol defines:
+
+- How a physical device obtains a **cryptographic identity**.
+- How that identity is **registered** in a verifiable registry.
+- How the device **proves** that it exists and that an event actually occurred.
+- How that proof is **verified** by independent parties.
+- How trust is **transferred** from the physical world to the digital world — and back.
+
+Axis Protocol does **not** define:
+
+- How to store data (blockchain, database, or otherwise).
+- How to execute transactions (smart contracts, off-chain services, or otherwise).
+- How to tokenize assets (energy, carbon, or otherwise).
+
+These are **implementation details** and **application logic** — they belong in implementations and applications, not in the protocol itself.
+
+---
+
+## Why Axis Protocol Exists
+
+The digital world — blockchains, smart contracts, tokens, databases — is excellent at storing and transferring value.
+
+But it is **blind** to the physical world.
+
+It cannot see a solar panel. It cannot verify that 1 MWh was actually produced. It cannot distinguish a real sensor from a software simulation.
+
+Axis Protocol solves this by defining a **standardized, cryptographically verifiable pipeline**:
+Physical Event → Device Identity → Proof → Verification → Digital Trust
+
+text
+
+This pipeline is:
+
+- **Domain-agnostic** — works for energy, logistics, manufacturing, healthcare, or any other domain.
+- **Platform-agnostic** — works with blockchains, databases, or any other persistence layer.
+- **Implementation-agnostic** — works with any runtime, any language, any stack.
 
 ---
 
 ## Design Principles
 
-Axis Protocol is designed around the following principles:
+1. **Trust Over Technology**
+   - Trust is the primary concern. Technology is a means to achieve it.
 
-1. **Layered Trust Model**  
-   Axis separates:
-   - The **semantic layer** (what is being asserted and under which conditions)
-   - The **transport & persistence layer** (where data lives and how it is ordered)
-   - The **policy layer** (who is trusted and according to which rules)
+2. **Identity is Cryptographic**
+   - Every device has its own identity. Private keys never leave the device.
 
-2. **Consensus-Agnostic**  
-   Axis can be bound to different execution and storage environments, provided they can offer:
-   - An append-only log or state
-   - Verifiable integrity and ordering (e.g., blockchains, verifiable logs)
-   - Addressable references to stored objects
+3. **Proof is Verifiable**
+   - Every event is cryptographically proven. Verification does not depend on a trusted third party.
 
-3. **Minimal Yet Extensible Core**  
-   The core specification defines a **small, stable set of concepts**:
-   - Actors and identities
-   - Claims and assets
-   - Evidence and attestations
-   - Envelopes and links
-   - Validation results and lifecycle transitions  
-   Profiles, verticals, and domain-specific extensions build on top of this core.
+4. **Registry is Canonical**
+   - Device identity, state, and history are maintained in a verifiable registry.
 
-4. **Deterministic Validation**  
-   Given:
-   - A set of canonical Axis objects
-   - A defined trust policy  
-   an implementation must be able to produce **deterministic, explainable validation results**.
-
-5. **Interoperability Focus**  
-   Implementations using different stacks or consensus layers should be able to:
-   - Exchange Axis envelopes
-   - Interpret core semantics in a compatible way
-   - Federate trust via standardized attestations and bindings
+5. **Protocol is Neutral**
+   - No dependency on any blockchain, platform, vendor, or domain.
 
 ---
 
-## High-Level Conceptual Model
+## Core Concepts
 
-At the heart of Axis is a **graph of trust** between actors:
-
-- **Actor** — an entity (human, organization, system) capable of issuing or receiving statements.
-- **Identity** — a verifiable identifier associated with an Actor (e.g., DID, key pair, or system-specific ID).
-- **Claim** — a structured statement about the world, an asset, or another actor.
-- **Asset** — an abstract representation of something of value or interest (tokenized or non-tokenized).
-- **Evidence** — data that supports or contradicts a claim.
-- **Attestation** — a signed statement by an actor about the validity or properties of a claim, asset, or evidence.
-- **Policy** — a set of rules describing how claims and attestations are evaluated and trusted.
-
-These elements are transported and stored using **Axis Envelopes**, which define canonical wire formats and linking structures.
+- **Device** — a physical entity that produces events.
+- **Identity** — a cryptographic key pair bound to a device.
+- **Registry** — a verifiable record of devices, their identities, and their states.
+- **Manifest** — a signed configuration that defines what a device is and what it can do.
+- **Proof** — a cryptographic attestation that a specific event occurred.
+- **Oracle** — a service that verifies proofs and bridges them to digital systems.
+- **Policy** — a set of rules that govern what is trusted and under what conditions.
 
 ---
 
-## Core Specification Layout
+## Architecture Layers
 
-The Axis core specification is organized into the following documents:
+Axis Protocol separates concerns into three logical layers:
 
-- [`spec/protocol/README.md`](protocol/README.md) — overview of the Axis Core Trust Protocol and its scope.
-- [`spec/protocol/model.md`](protocol/model.md) — formal data model: entities, relationships, and the trust graph.
-- [`spec/protocol/wire-format.md`](protocol/wire-format.md) — canonical encoding and serialization rules.
-- [`spec/protocol/validation.md`](protocol/validation.md) — validation pipeline, rules, and result representation.
-- [`spec/protocol/lifecycle.md`](protocol/lifecycle.md) — lifecycles and state transitions for claims, assets, and attestations.
+1. **Device Layer** — physical devices, cryptographic identity, proof generation.
+2. **Protocol Layer** — registration, verification, state management, attestation.
+3. **Application Layer** — domain-specific logic, tokenization, DeFi, etc.
 
-Bindings to specific execution environments (e.g., particular blockchains or ledgers) are defined in separate documents under `spec/bindings/`.
+The **Protocol Layer** is what this specification defines.  
+The **Device Layer** and **Application Layer** are implementation-specific and domain-specific.
+
+---
+
+## Relationship to Other Repositories
+
+- **Axis Protocol** (this repository) — the **normative specification** of the trust standard.
+- **Axis Core** — a **platform-agnostic reference implementation** of the protocol.
+- **Domain Applications** — specific applications built on the protocol (e.g., energy tokenization, supply chain tracking, etc.).
 
 ---
 
 ## Intended Audience
 
-The Axis Protocol specification is intended for:
+- **Architects** designing systems that require trust between physical and digital worlds.
+- **Implementers** building compatible devices, services, or platforms.
+- **Domain experts** defining vertical profiles (energy, logistics, healthcare, etc.).
 
-- **Protocol and system designers** who need a generic, interoperable trust and attestation layer.
-- **Implementers** building Axis-compatible nodes, services, SDKs, or libraries.
-- **Domain architects** designing domain-specific profiles (e.g., energy, identity, supply chain) on top of the Axis core.
+---
 
-Throughout the specification, examples are intentionally **domain-neutral**. Domain-specific profiles are expected to build on top of the core by specializing the model, defining additional constraints, and providing bindings to particular infrastructures.
+## Next Steps
+
+To understand the protocol in detail, read:
+
+1. `protocol/README.md` — core specification overview.
+2. `protocol/model.md` — data model and entities.
+3. `protocol/wire-format.md` — message format and serialization.
+4. `protocol/validation.md` — validation rules.
+5. `protocol/lifecycle.md` — lifecycle of entities and messages.

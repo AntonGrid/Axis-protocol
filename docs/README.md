@@ -2,89 +2,91 @@
 
 This directory contains **documentation and guides** that complement the normative specifications in `spec/`.
 
-- `spec/` – defines what Axis Protocol *is* (normative).
-- `docs/` – explains how to **understand, use and extend** Axis Protocol in real systems (informative).
-
-If you are new to Axis Protocol, this document is your starting point.
+> **Axis Protocol is an overlay trust standard.**  
+> It defines how physical devices and digital systems establish, exchange, and verify trust without relying on any specific blockchain, platform, or vendor.
 
 ---
 
-## 1. Documentation map
+## 1. What is Axis Protocol?
+
+Axis Protocol is the **language of trust** between the physical and digital worlds.
+
+It defines:
+
+- How a physical device obtains a **cryptographic identity**.
+- How that identity is **registered** in a verifiable registry.
+- How the device **proves** that an event occurred.
+- How that proof is **verified** by independent parties.
+- How trust is **transferred** from the physical world to the digital world — and back.
+
+Axis Protocol does **not** define:
+
+- How to store data (blockchain, database, or otherwise).
+- How to execute transactions (smart contracts, off-chain services, or otherwise).
+- How to tokenize assets (energy, carbon, or otherwise).
+
+These are **implementation details** and **application logic** — they belong in implementations (like Axis Core) and applications, not in the protocol itself.
+
+---
+
+## 2. Documentation Map
 
 Typical entry points:
 
-1. **Core protocol**
-   - [`../spec/protocol/wire-format.md`](../spec/protocol/wire-format.md)  
-     Wire format, envelope structure, primitive types.
-   - [`../spec/protocol/validation.md`](../spec/protocol/validation.md)  
-     Validation layers and protocol‑level invariants.
-   - [`../spec/protocol/lifecycle.md`](../spec/protocol/lifecycle.md)  
-     Entity and message lifecycle patterns.
+1. **Core Protocol**
+   - [`../spec/protocol/README.md`](../spec/protocol/README.md) — overview of the core specification.
+   - [`../spec/protocol/model.md`](../spec/protocol/model.md) — trust model and entities.
+   - [`../spec/protocol/wire-format.md`](../spec/protocol/wire-format.md) — wire format and serialization.
+   - [`../spec/protocol/validation.md`](../spec/protocol/validation.md) — validation rules.
+   - [`../spec/protocol/lifecycle.md`](../spec/protocol/lifecycle.md) — lifecycle of trust entities.
 
-2. **Architecture decisions**
-   - [`../spec/adr/`](../spec/adr/)  
-     Architecture Decision Records (ADRs) documenting key protocol design choices.
+2. **Architecture Decisions**
+   - [`../adr/`](../adr/) — Architecture Decision Records (ADRs).
 
-3. **Concepts and guides (this directory)**
-   - Conceptual overviews.
-   - Domain modeling guides.
-   - Implementation and integration notes.
-   - Examples and patterns.
-
-The exact set of documents in `docs/` may evolve over time; check this README for links and structure.
+3. **Concepts and Guides (this directory)**
+   - [`Axis-Protocol-One-Pager.md`](./Axis-Protocol-One-Pager.md) — high‑level overview.
+   - [`Axis-Protocol-Overview.md`](./Axis-Protocol-Overview.md) — detailed overview.
+   - [`Axis-Protocol-Specification.md`](./Axis-Protocol-Specification.md) — full specification.
+   - [`Axis-Protocol-Terminology.md`](./Axis-Protocol-Terminology.md) — core terminology.
+   - [`Axis-Governance-and-ADR.md`](./Axis-Governance-and-ADR.md) — governance and ADR process.
+   - [`merkle-proof-verification.md`](./merkle-proof-verification.md) — Merkle proof verification.
 
 ---
 
-## 2. Who this documentation is for
+## 3. Who This Documentation Is For
 
 This documentation is organized for three main audiences:
 
-1. **Protocol and domain designers**
+1. **Protocol and Domain Designers**
    - Define domains (`domain`, `entity_type`) and message schemas.
    - Specify validation and lifecycle rules.
    - Extend the protocol with new concepts if necessary (via ADRs).
 
 2. **Implementers**
    - Build or extend runtimes that support Axis Protocol.
-   - Implement serialization, validation and execution.
-   - Integrate Axis Protocol with transports, storage and authorization.
+   - Implement serialization, validation, and execution.
+   - Integrate Axis Protocol with transports, storage, and authorization.
 
-3. **Application developers / integrators**
-   - Use existing implementations (e.g. Axis Core or others) to build products.
-   - Model devices, services and workflows using Axis messages.
+3. **Application Developers / Integrators**
+   - Use existing implementations (e.g., Axis Core) to build products.
+   - Model devices, services, and workflows using Axis messages.
    - Integrate Axis with existing infrastructures and protocols.
 
 ---
 
-## 3. Core concepts (informal overview)
+## 4. Core Concepts (Informal Overview)
 
 The normative definitions are in `spec/`, but the following high‑level concepts help orient yourself:
 
-- **Message envelope**  
-  A consistent wrapper around all Axis messages: contains type, versioning, entity references, correlation information and payload.
-
-- **Domains and entities**
-  - A **domain** groups related entity types and message schemas (e.g. “energy.metering”).
-  - An **entity** is a logical object identified by `domain`, `entity_type`, `entity_id`.
-
-- **Message types**
-  - Commands, events, queries, responses, notifications, errors, and possible extensions.
-  - Each combination of domain, entity_type, message_type and message_version defines a concrete schema.
-
-- **Validation layers**
-  - Structural (wire‑level correctness).
-  - Semantic (message makes sense according to its schema).
-  - State‑dependent (message is valid in current system state, authorized, etc.).
-
-- **Lifecycles**
-  - Typical entity phases: Non‑existent → Initializing → Active → Suspended → Terminated.
-  - Domains refine these phases and define allowed transitions.
-
-For details, always refer back to the protocol specifications in `spec/protocol/`.
+- **Trust Envelope** — a consistent wrapper around all Axis messages.
+- **Domains and Entities** — logical grouping of messages and state.
+- **Message Types** — commands, events, queries, responses, notifications, errors.
+- **Validation Layers** — structural, cryptographic, semantic, state‑dependent.
+- **Lifecycles** — how trust entities are born, live, and die.
 
 ---
 
-## 4. Domain modeling with Axis Protocol
+## 5. Domain Modeling with Axis Protocol
 
 Axis Protocol is **domain‑agnostic**. Each domain provides its own models on top of the protocol.
 
@@ -108,7 +110,7 @@ A typical domain modeling process:
 4. **Define lifecycles**
    - What phases an entity can be in.
    - Which messages are allowed in each phase.
-   - How transitions occur (e.g. which command/event causes which transition).
+   - How transitions occur.
 
 5. **Document error and conflict behavior**
    - When messages are rejected.
@@ -121,55 +123,27 @@ Domain documentation can live:
 
 ---
 
-## 5. Implementations and runtimes
+## 6. Relationship to Implementations
 
-Axis Protocol does **not** prescribe a specific runtime, language or infrastructure.
+Axis Protocol does **not** prescribe a specific runtime, language, or infrastructure.
 
 Common implementation patterns:
 
 - **Library / SDK**
   - Provides data structures for envelopes and payloads.
-  - Implements serialization/deserialization to/from Axis wire format.
+  - Implements serialization/deserialization.
   - Enforces structural and semantic validation rules.
 
-- **Runtime / service**
-  - Accepts Axis messages over one or more transports (HTTP, message bus, ledger, etc.).
+- **Runtime / Service**
+  - Accepts Axis messages over one or more transports.
   - Applies state‑dependent validation and business logic.
-  - Emits Axis messages as events, responses or notifications.
+  - Emits Axis messages as events, responses, or notifications.
 
-- **Gateway / adapter**
-  - Translates between Axis Protocol and other protocols (fieldbuses, legacy systems, proprietary APIs).
+- **Gateway / Adapter**
+  - Translates between Axis Protocol and other protocols.
   - Acts as a bridge between devices and backends.
 
-Reference implementations (such as Axis Core) are intended as **examples and starting points**, not as protocol definitions.  
-They MUST remain compatible with the normative specs in `spec/`.
-
----
-
-## 6. Transport and storage
-
-Axis Protocol is **transport‑agnostic**:
-
-- Messages can be carried over:
-  - TCP/UDP connections,
-  - message queues or pub/sub systems,
-  - event logs or ledgers,
-  - request/response APIs,
-  - or any other reliable or best‑effort channels.
-
-- Messages can be stored as:
-  - append‑only logs,
-  - event streams per entity,
-  - snapshots + change logs,
-  - or other representations.
-
-Each deployment SHOULD document:
-
-- How Axis messages are framed on the chosen transport.
-- How ordering (if any) is guaranteed or approximated.
-- How long messages are retained and how state is reconstructed if needed.
-
-The wire‑format spec (`spec/protocol/wire-format.md`) provides guidelines for framing and length‑prefixing.
+Reference implementations (such as Axis Core) are intended as **examples and starting points**, not as protocol definitions.
 
 ---
 
@@ -183,7 +157,7 @@ Axis Protocol is designed to evolve:
 
 When proposing protocol‑level changes:
 
-1. Start by reading existing ADRs in `spec/adr/`.
+1. Start by reading existing ADRs in `../adr/`.
 2. Draft a new ADR describing:
    - the problem and context,
    - the proposed change,
@@ -191,37 +165,14 @@ When proposing protocol‑level changes:
    - alternatives and trade‑offs.
 3. Update or add specification documents in `spec/` as needed.
 
-The goal is to keep Axis Protocol coherent, minimal and implementation‑neutral while still being practical for real‑world use.
-
 ---
 
-## 8. How to navigate and contribute to docs/
-
-If you want to improve or extend the documentation:
-
-- **Clarify** existing documents:
-  - Fix ambiguities, improve explanations, add diagrams or examples.
-- **Add guides**:
-  - Domain modeling recipes,
-  - implementation checklists,
-  - migration or integration guides.
-- **Keep specs and docs aligned**:
-  - When specs change, ensure `docs/` is updated to reflect the new behavior.
+## 8. How to Contribute
 
 Guidelines:
 
 1. Documentation in `spec/` is **normative** – change carefully and with ADRs where appropriate.
 2. Documentation in `docs/` is **informative** – can be more narrative, with examples and recommendations.
-3. Avoid tying generic docs to a single specific implementation or technology stack; keep implementation‑specific details in separate, clearly labeled sections or repos.
+3. Avoid tying generic docs to a single specific implementation or technology stack.
 
----
-
-## 9. Feedback and questions
-
-If you have questions or suggestions about Axis Protocol documentation:
-
-- Open an issue in the repository.
-- Propose changes via pull requests.
-- Reference specific sections of `spec/` or `docs/` when discussing behavior or ambiguities.
-
-Clear documentation is part of the protocol’s contract; improvements here benefit all implementations and domains built on Axis.
+Open an issue or submit a pull request for improvements.

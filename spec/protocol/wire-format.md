@@ -1,316 +1,228 @@
 # Axis Protocol – Wire Format Specification
 
-This document defines the on‑wire representation of Axis Protocol messages.  
-It is intentionally **implementation‑neutral** and does not assume any specific runtime, blockchain, or smart‑contract framework.
+This document defines the **on‑wire representation** of Axis Protocol messages.
+
+The wire format is the **carrier of trust** between physical devices and digital systems. It ensures that every message carrying a Proof, Attestation, or Claim is **cryptographically verifiable**, **deterministic**, and **implementation-neutral**.
 
 > Axis Protocol defines *what* is sent over the wire.  
-> Concrete implementations (e.g. Axis Core or other runtimes) define *how* these bytes are produced, transported and persisted.
+> Concrete implementations define *how* these bytes are produced, transported, and persisted.
 
 ---
 
-## 1. Design goals
+## 1. Design Goals
 
 The wire format is designed to be:
 
-- **Deterministic** – the same logical message must always serialize to the same byte sequence.
-- **Versioned** – messages are self‑describing and can evolve over time.
-- **Binary and compact** – suitable for constrained networks and devices.
-- **Language‑agnostic** – implementable in any language/runtime.
-- **Extensible** – fields and message types can be extended in backward‑compatible ways.
-
-This specification uses an abstract description of fields and types.  
-Concrete encodings (e.g. for integers or byte arrays) are defined in the **Primitive Types** section.
+- **Trust-Carrying** — every message that conveys trust is cryptographically verifiable.
+- **Deterministic** — the same logical message always serializes to the same byte sequence.
+- **Versioned** — messages are self‑describing and can evolve over time.
+- **Binary and Compact** — suitable for constrained networks and devices.
+- **Language‑Agnostic** — implementable in any language or runtime.
+- **Extensible** — fields and message types can be extended in backward‑compatible ways.
 
 ---
 
-## 2. Message envelope
+## 2. Trust Envelope
 
-Every Axis Protocol message is encoded as a **Message Envelope**. The envelope wraps a concrete message payload (command, event, query, response, etc.) and provides a consistent framing.
+Every Axis Protocol message is encoded as a **Trust Envelope**.
 
-### 2.1. Envelope structure
+The Trust Envelope wraps the message payload and provides:
 
-```text
+- **Identity** — who produced the message.
+- **Integrity** — the message cannot be modified without detection.
+- **Non‑repudiation** — the producer cannot deny having sent the message.
+
+### 2.1 Envelope Structure
 +----------------------+----------------------+-----------------------+
-|  Envelope Header     |  Message Header      |  Message Payload      |
+| Envelope Header | Message Header | Message Payload |
 +----------------------+----------------------+-----------------------+
+
+text
+
 In logical terms:
-
-Envelope {
-    envelope_version: u8,
-    transport_id: TransportId,
-    correlation_id: CorrelationId,
-    message_header: MessageHeader,
-    message_payload: MessagePayload,
+TrustEnvelope {
+envelope_version: u8,
+transport_id: TransportId,
+correlation_id: CorrelationId,
+message_header: MessageHeader,
+message_payload: MessagePayload,
+signature: Signature, // cryptographic signature over the entire envelope
 }
-Fields:
 
-envelope_version (u8)
-Version of the envelope format. This document specifies version 1.
+text
 
-transport_id (TransportId)
-Identifies the transport or channel over which the message is carried.
-The protocol does not require any particular transport; this field allows implementations to:
+### 2.2 Envelope Header
 
-multiplex messages over multiple logical channels,
-support multiple backends in the same deployment.
-correlation_id (CorrelationId)
-Opaque identifier used to correlate requests and responses, or link related messages in a workflow.
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `envelope_version` | u8 | Version of the envelope format. |
+| `transport_id` | TransportId | Identifies the transport or channel. |
+| `correlation_id` | CorrelationId | Opaque identifier for request/response correlation. |
 
-message_header (MessageHeader)
-Describes type, version and basic routing information for the payload.
+---
 
-message_payload (MessagePayload)
-Type‑specific body of the message (command, event, query, response, notification, etc.).
+## 3. Message Header
 
-Implementations MUST validate that envelope_version is supported before attempting to parse the remainder of the message.
-
-3. Message header
-The Message Header provides the minimal metadata required to correctly interpret the payload.
-
-Logical structure:
-
+The Message Header provides the metadata required to interpret the payload and establish trust context.
 MessageHeader {
-    message_type: MessageType,
-    message_version: u16,
-    domain: DomainId,
-    entity_type: EntityTypeId,
-    entity_id: EntityId,
-    timestamp: Timestamp,
+message_type: MessageType,
+message_version: u16,
+domain: DomainId,
+entity_type: EntityTypeId,
+entity_id: EntityId,
+timestamp: Timestamp,
+issuer_id: IdentityId, // cryptographic identity of the issuer
 }
-Fields:
 
-message_type (MessageType)
-High‑level classification of the message. See Section 4.
+text
 
-message_version (u16)
-Version of the logical message schema.
-This allows evolution of individual message types without changing the envelope version.
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `message_type` | MessageType | High‑level classification of the message. |
+| `message_version` | u16 | Version of the logical message schema. |
+| `domain` | DomainId | Application or business domain. |
+| `entity_type` | EntityTypeId | Logical type of the entity. |
+| `entity_id` | EntityId | Stable identifier of the specific entity. |
+| `timestamp` | Timestamp | Time the message was created (UTC). |
+| `issuer_id` | IdentityId | Cryptographic identity of the issuer. |
 
-domain (DomainId)
-Identifies the application or business domain (e.g. “energy”, “asset‑tracking”, “payments”).
-Axis Protocol does not prescribe any fixed domains; values are deployment‑specific.
+The `issuer_id` is **critical** for trust. It binds the message to a specific cryptographic identity.
 
-entity_type (EntityTypeId)
-Logical type of the entity the message refers to (e.g. “Device”, “MeterReading”, “Contract”).
+---
 
-entity_id (EntityId)
-Stable identifier of the specific entity instance (e.g. device serial number or application‑level ID).
+## 4. Message Types
 
-timestamp (Timestamp)
-Time at which the message was created, in a deployment‑defined time base (see Primitive Types).
+Axis Protocol defines the following message types:
 
-4. Message types
-MessageType is an enumeration describing the role of the message in the system.
+| Type | Value | Description |
+| :--- | :--- | :--- |
+| `Proof` | 0x01 | Cryptographic proof of a physical event. |
+| `Attestation` | 0x02 | Signed verification of a Proof by a trusted entity. |
+| `Claim` | 0x03 | A digital claim backed by an Attestation. |
+| `Query` | 0x04 | Request for information. |
+| `QueryResponse` | 0x05 | Response to a Query. |
+| `Notification` | 0x06 | Out‑of‑band information. |
+| `Acknowledgment` | 0x07 | Confirmation of receipt. |
+| `Error` | 0x08 | Error indication. |
 
-Recommended base set:
+The **Proof**, **Attestation**, and **Claim** types are the core trust‑carrying messages.
 
-enum MessageType (u8) {
-    Command        = 0x01,
-    Event          = 0x02,
-    Query          = 0x03,
-    QueryResponse  = 0x04,
-    Notification   = 0x05,
-    Acknowledgment = 0x06,
-    Error          = 0x07,
-    ReservedStart  = 0x80, // implementation-specific extensions >= 0x80
+---
+
+## 5. Message Payloads
+
+The payload is defined by the combination of `message_type`, `domain`, `entity_type`, and `message_version`.
+
+### 5.1 Proof Payload
+
+A Proof is the atomic unit of trust from the physical world.
+ProofPayload {
+device_id: DeviceId,
+event_data: EventData,
+timestamp: Timestamp,
+nonce: Nonce,
+signature: Signature, // signed by device private key
 }
-Semantics:
 
-Command
-Asks the system to perform an action that may change state.
+text
 
-Event
-Represents a fact that has already occurred; typically emitted as part of state changes.
+### 5.2 Attestation Payload
 
-Query
-Request for information that should not change state.
+An Attestation is a signed verification of a Proof by a trusted entity.
+AttestationPayload {
+proof_id: ProofId,
+decision: Decision, // valid / invalid
+oracle_id: IdentityId,
+timestamp: Timestamp,
+signature: Signature, // signed by oracle private key
+}
 
-QueryResponse
-Response data for a specific Query (correlated via correlation_id).
+text
 
-Notification
-Out‑of‑band information that may be delivered without a corresponding request.
+### 5.3 Claim Payload
 
-Acknowledgment
-Lightweight confirmation that a message has been received and accepted for processing.
+A Claim is a digital statement backed by an Attestation.
+ClaimPayload {
+attestation_id: AttestationId,
+statement: Statement,
+timestamp: Timestamp,
+}
 
-Error
-Indicates that a previous request could not be processed successfully.
+text
 
-Implementations MAY define additional message types using values in the extension range (>= 0x80), but MUST NOT reuse or redefine base values.
+---
 
-5. Message payloads
-The payload is defined by the combination of message_type, domain, entity_type and message_version.
-This specification describes the envelope and header; concrete deployments define their own message schemas on top of this structure.
+## 6. Primitive Types
 
-5.1. Namespacing and versioning
-Each payload schema SHOULD be uniquely identified by:
-
-domain
-entity_type
-message_type
-message_version
-Example logical identity:
-
-(domain = "energy.metering",
- entity_type = "Meter",
- message_type = Command,
- message_version = 1)
-Implementations MUST ensure:
-
-A given identity maps to exactly one field layout and encoding.
-Message consumers validate message_version and reject unsupported schemas.
-5.2. Encoding requirements
-Payloads MUST obey:
-
-Deterministic field order
-Fields are encoded in a predefined, documented order.
-
-No implicit defaults
-If a field is required, it MUST appear in the payload encoding; defaulting is a schema‑level concern.
-
-Explicit optionality
-Optional fields SHOULD be encoded using:
-
-a presence bitmap, or
-a tagged union / variant type, or
-nullable semantics, depending on the chosen primitive encoding.
-Forward compatibility
-
-Receivers MUST ignore unknown fields that are explicitly allowed by the encoding scheme (e.g. length‑delimited structures).
-New fields are typically added at the end of the field order for a given message_version.
-The exact rules for field tagging (if any), length prefixes and variant encodings are defined by the chosen serialization within the guidelines of this wire format (see Primitive Types).
-
-6. Primitive types
 This section defines abstract primitive types used throughout the wire format.
-Concrete implementations MUST document how these map to their chosen binary encodings.
 
-6.1. Integer types
-Recommended logical set:
+| Type | Description | Encoding |
+| :--- | :--- | :--- |
+| `u8, u16, u32, u64` | Unsigned integers | Fixed‑width, big‑endian |
+| `i32, i64` | Signed integers | Fixed‑width, big‑endian |
+| `bool` | Boolean | 0x00 = false, 0x01 = true |
+| `bytes` | Arbitrary byte sequence | Length (u32) + raw bytes |
+| `string` | UTF‑8 text | Length (u32) + UTF‑8 bytes |
+| `Timestamp` | UTC timestamp | i64 (seconds since Unix epoch) |
+| `Signature` | Cryptographic signature | bytes (algorithm‑specific) |
 
-u8, u16, u32, u64 – unsigned integers.
-i32, i64 – signed integers where needed.
-Encoding rules:
+Identifiers (`DeviceId`, `IdentityId`, `ProofId`, etc.) are represented as `bytes` or `string`.
 
-Implementations MAY choose fixed‑width big‑endian or little‑endian encodings.
-Alternatively, variable‑length integer encodings (e.g. LEB128) MAY be used, but MUST be applied consistently within a deployment and documented.
-6.2. Boolean
-Logical type:
+---
 
-bool – encoded as a single byte (0x00 = false, 0x01 = true) or a packed bit in a bitmap.
-The chosen representation MUST be consistent across a deployment.
+## 7. Framing and Boundaries
 
-6.3. Byte arrays
-Logical type:
+Axis Protocol assumes messages are carried by some underlying transport (TCP, message queue, event log, smart contract, etc.).
 
-bytes – arbitrary byte sequence.
-Encoding:
+Two recommended framing strategies:
 
-Length (u32 or varint) + raw bytes
-The integer type used for Length MUST be documented for each deployment.
+1. **Length‑Prefixed** — `MessageLength (u32)` + `EnvelopeBytes`
+2. **Delimited Records** — message boundaries are defined by the transport.
 
-6.4. Text strings
-Logical type:
+Each deployment MUST specify which framing strategy is used.
 
-string – UTF‑8 encoded text.
-Encoding:
+---
 
-Length (u32 or varint) + UTF-8 bytes
-Strings MUST be valid UTF‑8; invalid sequences MUST cause validation failure.
+## 8. Validation on the Wire
 
-6.5. Identifiers
-The following logical identifiers are used in the envelope and header:
+Implementations MUST perform basic validation before accepting a message:
 
-TransportId
-CorrelationId
-DomainId
-EntityTypeId
-EntityId
-Each identifier MAY be represented as:
+- **Envelope Validation**
+  - Check `envelope_version` is supported.
+  - Verify structural integrity.
+  - Verify `message_type` is known.
 
-a string (human‑readable, flexible), or
-a bytes value (compact, opaque), or
-a fixed‑width integer, as defined by the deployment.
-Implementations MUST:
+- **Header Validation**
+  - Ensure required fields are present.
+  - Validate `issuer_id` is a known identity.
 
-Choose and document a specific representation for each identifier type.
-Treat identifiers as opaque at the wire level (no semantic parsing is required by the core protocol).
-6.6. Timestamp
-Logical type:
+- **Signature Validation**
+  - Verify the signature covers the entire envelope.
+  - Verify the signature is valid for the `issuer_id`.
 
-Timestamp – a point in time.
-Recommended representation:
+- **Payload Validation**
+  - Validate payload conforms to the schema.
 
-i64 or u64 counting:
-seconds since Unix epoch, or
-milliseconds/microseconds since Unix epoch.
-The exact epoch and time unit MUST be documented by the deployment.
-Timestamps MUST be interpreted in UTC at the protocol level.
+---
 
-7. Framing and boundaries
-Axis Protocol assumes that messages are carried by some underlying transport (e.g. TCP, message queue, event log, smart‑contract calls, etc.), but does not prescribe any specific one.
+## 9. Extensibility
 
-There are two recommended approaches to framing:
+The wire format is designed to allow incremental extension:
 
-Length‑prefixed messages
+- **Backward‑Compatible Changes**
+  - Adding new message types.
+  - Adding new optional fields to payloads.
+  - Introducing new domains or entity types.
 
-MessageLength (u32 or varint) + EnvelopeBytes
-Simple to implement.
-Suitable for stream‑oriented transports.
-Delimited records
+- **Breaking Changes**
+  - Changing meaning or encoding of existing fields.
+  - Reusing numeric codes with different semantics.
+  - Changing format of identifiers or timestamps.
 
-Messages are stored or transmitted as discrete records.
-The record boundary implicitly defines the envelope boundary.
-Each deployment MUST specify:
+---
 
-Which framing strategy is used.
-The integer type used for MessageLength if applicable.
-Any maximum message size limits.
-8. Error handling and validation on the wire
-Implementations MUST perform basic validation before accepting a message for higher‑level processing:
+## 10. Relationship to Implementations
 
-Envelope validation
+Axis Protocol defines the **abstract wire format**. Implementations (e.g., Axis Core) provide concrete encodings, codecs, and transport integrations.
 
-Check envelope_version is supported.
-Verify message length and structural integrity.
-Validate that message_type is known or safely ignorable.
-Header validation
-
-Ensure that required header fields are present and correctly typed.
-Validate that message_version is supported for the given domain, entity_type and message_type.
-Payload validation (structural)
-
-Validate that the payload conforms to the encoding rules for the specific schema.
-Deep semantic validation rules are defined in the validation layer, not the wire format.
-On validation failure, implementations SHOULD:
-
-Reject the message, and
-Optionally emit an Error message correlated to the original correlation_id, if that is meaningful for the transport and application.
-9. Extensibility
-Axis Protocol wire format is designed to allow incremental extension without breaking existing deployments.
-
-9.1. Backward‑compatible changes
-The following changes are generally considered backward‑compatible when carefully applied:
-
-Adding new message types in the extension range (>= 0x80).
-Adding new optional fields to payloads in a way that older decoders can ignore.
-Introducing new domains or entity types.
-9.2. Breaking changes
-The following changes are breaking and MUST NOT be introduced without coordination and versioning:
-
-Changing the meaning or encoding of existing fields.
-Reusing numeric codes for MessageType with different semantics.
-Changing the format of identifiers or timestamps without versioning.
-When breaking changes are unavoidable, they MUST be accompanied by:
-
-A new envelope_version, or
-A new message_version for the affected messages, or
-A new domain/entity namespace, as appropriate.
-10. Relationship to implementations
-Axis Protocol defines the abstract wire format described in this document.
-Axis Core (or other runtimes) MAY provide:
-concrete binary encodings for all primitive types,
-code libraries for serialization/deserialization,
-integration with specific transports or ledgers.
-Implementations MUST treat this document as the normative source of truth for the structure of on‑wire messages.
-Any implementation‑specific optimizations or shortcuts MUST remain compatible with this specification.
+Implementations MUST treat this document as the normative source of truth for on‑wire messages.

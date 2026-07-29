@@ -1,8 +1,8 @@
 # ADR-0007: Security & Key Management
 
-**Status:** Draft (Approved)  
-**Date:** 2026-07-17 (revised 2026-07-27)  
-**Authors:** Axis Protocol Team  
+**Status:** Draft (Approved)
+**Date:** 2026-07-17 (revised 2026-07-27)
+**Authors:** Axis Protocol Team
 **Related:** ADR-0001, ADR-0008, ADR-0009
 
 ---
@@ -42,21 +42,21 @@ The choice between these models MUST be explicitly documented per deployment.
 
 ### 4. Key Lifecycle
 
-- **Generation:**  
-  - Private keys **MUST** be generated in a secure environment (HSM / Secure Element / TPM or equivalent).  
+- **Generation:**
+  - Private keys **MUST** be generated in a secure environment (HSM / Secure Element / TPM or equivalent).
   - Device keys **MUST** be generated in the device secure element when possible; otherwise, generated in a provisioning environment with a documented secure transfer to the device.
-- **Storage:**  
-  - Private keys **MUST** be stored in a secure hardware module on the device (Secure Element / eFuse / TPM).  
+- **Storage:**
+  - Private keys **MUST** be stored in a secure hardware module on the device (Secure Element / eFuse / TPM).
   - For infrastructure keys, HSMs or equivalent secure modules are RECOMMENDED.
-- **Provisioning:**  
-  - Devices are enrolled with a signed Device Enrollment Certificate / Manifest containing `device_id`, public keys, and provisioning metadata.  
+- **Provisioning:**
+  - Devices are enrolled with a signed Device Enrollment Certificate / Manifest containing `device_id`, public keys, and provisioning metadata.
   - This manifest is registered in the Manifest Registry and can be referenced in governance and operational flows.
-- **Rotation:**  
-  - Keys **MUST** support rotation.  
-  - The rotation process **MUST** produce new key material, submit the new public key and attestation to the registry, and, when required, re-sign device manifests.  
+- **Rotation:**
+  - Keys **MUST** support rotation.
+  - The rotation process **MUST** produce new key material, submit the new public key and attestation to the registry, and, when required, re-sign device manifests.
   - Old keys **MUST** be revocable in the registry.
-- **Revocation:**  
-  - The Registry supports revocation records and reasons.  
+- **Revocation:**
+  - The Registry supports revocation records and reasons.
   - Chain-of-trust checks **MUST** validate revocation status for all keys involved in trust decisions.
 
 ### 5. Attestation
@@ -84,7 +84,7 @@ The choice between these models MUST be explicitly documented per deployment.
 - Public keys for root-of-trust and manufacturer authorities **MUST** be publishable in the Manifest Registry.
 - Implementations MAY additionally anchor registry state (e.g., Merkle roots) in an immutable system such as a blockchain, append-only log, or hardware-protected log.
 - **Anchoring policy (recommended default):**
-  - Periodic anchoring once per 24 hours (daily Merkle root or equivalent) is **RECOMMENDED**.  
+  - Periodic anchoring once per 24 hours (daily Merkle root or equivalent) is **RECOMMENDED**.
   - Emergency revocation anchors **MUST** be supported and performed as needed to record urgent revocations or trust-root changes.
 
 Exact anchoring frequency and mechanisms MAY vary between deployments but MUST be documented and auditable.
@@ -102,9 +102,9 @@ Exact anchoring frequency and mechanisms MAY vary between deployments but MUST b
 
 ## Related ADRs
 
-- ADR-0001: Private Key Never Leaves the Device  
-- ADR-0005: Device States and Lifecycle  
-- ADR-0008: Secure Firmware Updates (OTA)  
+- ADR-0001: Private Key Never Leaves the Device
+- ADR-0005: Device States and Lifecycle
+- ADR-0008: Secure Firmware Updates (OTA)
 - ADR-0009: Governance Model
 
 ---

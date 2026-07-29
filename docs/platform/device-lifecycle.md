@@ -4,9 +4,11 @@
 
 ## Introduction
 
-This document describes the complete lifecycle of a device within the Axis Protocol ecosystem. All devices go through a sequence of states, each of which defines their behavior, rights, and available actions.
+This document describes the complete lifecycle of a device within the Axis Protocol ecosystem.
 
-The goal is to ensure transparency, manageability, and security across the entire network.
+All devices go through a sequence of states, each of which defines their behavior, rights, and available actions.
+
+The goal is to ensure **transparency, manageability, and security** of the trust pipeline.
 
 ---
 
@@ -16,7 +18,7 @@ The goal is to ensure transparency, manageability, and security across the entir
 The device is unknown to the system. It has no cryptographic identity within Axis.
 
 **Actions:**
-- Generate a key pair (private/public key).
+- Generate a cryptographic key pair (private/public key).
 - Send a registration request with the public key.
 
 ### 2. REGISTERED
@@ -27,7 +29,7 @@ The device has a cryptographic identity but is not yet linked to an owner.
 - Send heartbeat (periodic status signals).
 
 ### 3. CLAIMED
-The device is linked to a specific owner (wallet) but not yet configured for operation.
+The device is linked to a specific owner but not yet configured for operation.
 
 **Actions:**
 - Receive configuration (Device Manifest).
@@ -41,12 +43,12 @@ The device is fully configured and ready for operation, but not yet active.
 - Perform self-test of all systems.
 
 ### 5. ACTIVE
-The device is operational, signing and sending Proofs to the Oracle.
+The device is fully operational, signing and sending Proofs to a Verifier.
 
 **Actions:**
-- Send Proofs.
-- Send heartbeat.
-- Participate in pools (if applicable).
+- Generate and send Proofs of physical events.
+- Send heartbeat signals.
+- Respond to verification requests.
 
 ### 6. QUARANTINE
 The device is suspected of malfunction or compromise.
@@ -75,7 +77,7 @@ The device is permanently decommissioned.
 ## State Transitions
 
 | From | To | Trigger |
-|------|----|---------|
+| :--- | :--- | :--- |
 | UNREGISTERED | REGISTERED | Registration request with valid public key |
 | REGISTERED | CLAIMED | Claim Code entered by owner |
 | CLAIMED | PROVISIONED | Device configured and self-test passed |
@@ -94,9 +96,10 @@ The device is permanently decommissioned.
 
 ## Normative Requirements
 
-- **State Authority:** The Device Registry is the single source of truth for device state (see ADR-0002).
+- **State Authority:** The Device Registry is the single source of truth for device state.
 - **State Changes:** All state transitions MUST be authorized and logged.
 - **Auditability:** State transitions MUST be auditable for compliance and security review.
+- **Trust Preservation:** State transitions MUST preserve the chain of trust.
 
 ---
 

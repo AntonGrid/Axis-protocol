@@ -1,13 +1,14 @@
 # Axis Protocol – Validation Specification
 
-This document defines the validation rules for Axis Protocol messages and related entities.  
+This document defines the validation rules for Axis Protocol messages and related entities.
 It is **implementation‑neutral**: it specifies *what* must be validated, not *how* specific runtimes (such as Axis Core or other systems) implement these checks.
 
 Validation is split into layers:
 
 1. **Structural validation** – correctness of the wire format and basic fields.
-2. **Semantic validation** – correctness of message content with respect to protocol rules.
-3. **State‑dependent validation** – correctness relative to current system state and configuration.
+2. **Cryptographic validation** – verification of signatures and identity.
+3. **Semantic validation** – correctness of message content with respect to protocol rules.
+4. **State‑dependent validation** – correctness relative to current system state and configuration.
 
 ---
 
@@ -16,6 +17,7 @@ Validation is split into layers:
 Validation in Axis Protocol aims to ensure that:
 
 - Messages are **well‑formed** and **unambiguous**.
+- Messages are **authentic** — they come from a known cryptographic identity.
 - Protocol invariants are upheld across implementations.
 - Invalid or malicious inputs are detected early and rejected deterministically.
 - Different implementations make **consistent decisions** on the same input.
@@ -48,14 +50,43 @@ At minimum, structural validation includes:
    - All required fields for the specific message schema are present.
    - Optional fields (if present) comply with encoding rules.
 
-If structural validation fails, the message MUST be rejected.  
+If structural validation fails, the message MUST be rejected.
 Implementations MAY emit a protocol‑level `Error` message if appropriate for their environment.
 
 ---
 
-### 2.2. Semantic validation (message‑level)
+### 2.2. Cryptographic validation
 
-Semantic validation checks that a structurally valid message is **meaningful** and **internally consistent** according to the Axis Protocol rules and the specific domain schemas.
+Cryptographic validation ensures that the message is **authentic** and **non‑repudiable**.
+
+This is the **core of trust** in Axis Protocol.
+
+At minimum, cryptographic validation includes:
+
+1. **Signature Verification**
+   - The message envelope carries a cryptographic signature.
+   - The signature covers the entire envelope.
+   - The signature is valid for the claimed `issuer_id`.
+
+2. **Identity Verification**
+   - The `issuer_id` corresponds to a known cryptographic identity.
+   - The identity is active and not revoked.
+
+3. **Nonce Verification**
+   - The message contains a `nonce` (if applicable).
+   - The `nonce` has not been used before (replay protection).
+
+4. **Timestamp Verification**
+   - The `timestamp` is within an acceptable range.
+   - The `timestamp` is not in the future (or past beyond a configured threshold).
+
+If cryptographic validation fails, the message MUST be rejected.
+
+---
+
+### 2.3. Semantic validation (message‑level)
+
+Semantic validation checks that a structurally and cryptographically valid message is **meaningful** and **internally consistent** according to the Axis Protocol rules and the specific domain schemas.
 
 Semantic validation typically includes:
 
@@ -108,9 +139,9 @@ The exact validation rules for each concrete message schema are part of the doma
 
 ---
 
-### 2.3. State‑dependent validation
+### 2.4. State‑dependent validation
 
-State‑dependent validation uses additional context about current system state or configuration.  
+State‑dependent validation uses additional context about current system state or configuration.
 This layer is inherently deployment‑specific, but Axis Protocol defines some common patterns and expectations.
 
 Typical examples:
@@ -127,11 +158,46 @@ Axis Protocol itself does not prescribe a specific access‑control or ownership
 
 ---
 
-## 3. Protocol‑level invariants
+## 3. Trust Pipeline Validation
+
+Validation follows the trust pipeline:
+Physical Event → Proof → Verification → Attestation → Digital Trust
+
+text
+
+Each stage has specific validation rules.
+
+### 3.1. Proof Validation
+
+A Proof is validated as follows:
+
+1. **Structural** — Proof is well‑formed.
+2. **Cryptographic** — Signature is valid, Device identity is known.
+3. **Semantic** — Event data is consistent, nonce is fresh.
+
+### 3.2. Attestation Validation
+
+An Attestation is validated as follows:
+
+1. **Structural** — Attestation is well‑formed.
+2. **Cryptographic** — Signature is valid, Oracle identity is trusted.
+3. **Semantic** — Proof is valid, decision is consistent.
+
+### 3.3. Claim Validation
+
+A Claim is validated as follows:
+
+1. **Structural** — Claim is well‑formed.
+2. **Cryptographic** — Attestation is valid.
+3. **Semantic** — Claim is consistent with Attestation and Registry state.
+
+---
+
+## 4. Protocol‑level invariants
 
 This section describes invariants that should hold across all domains and implementations that claim conformance with Axis Protocol.
 
-### 3.1. Deterministic outcomes
+### 4.1. Deterministic outcomes
 
 Given:
 
@@ -144,7 +210,7 @@ two conforming Axis implementations MUST:
 - either both accept or both reject the message, and
 - if accepted, produce logically equivalent outcomes (events, state transitions, or responses) according to the shared domain specification.
 
-### 3.2. Idempotence and replay
+### 4.2. Idempotence and replay
 
 Axis Protocol does not enforce a particular replay protection strategy, but deployments SHOULD define clear behavior for:
 
@@ -156,7 +222,7 @@ Recommended patterns:
 - Use stable identifiers for operations where idempotence is intended, and track whether a given operation ID has been processed.
 - Define clear policies for how long replay protection data is retained.
 
-### 3.3. Correlation consistency
+### 4.3. Correlation consistency
 
 If a deployment uses `correlation_id` to link messages (e.g. request‑response, command‑event chains), then:
 
@@ -165,13 +231,20 @@ If a deployment uses `correlation_id` to link messages (e.g. request‑response,
   - a `QueryResponse` can be reliably matched to its `Query`,
   - an `Error` can be associated with the initial request that caused it, if applicable.
 
+### 4.4. Chain of Trust
+
+Trust flows from Device → Proof → Attestation → Digital Claim.  
+Each link in the chain MUST be valid.
+
+The Registry is the source of truth for Device identity and state.
+
 ---
 
-## 4. Validation flows
+## 5. Validation flows
 
 This section describes recommended high‑level flows for message handling.
 
-### 4.1. Inbound message processing
+### 5.1. Inbound message processing
 
 A typical inbound validation pipeline:
 
@@ -180,17 +253,21 @@ A typical inbound validation pipeline:
    - Parse envelope and header.
    - Validate envelope version and header fields.
    - Parse payload according to declared schema.
-3. **Semantic validation**
+3. **Cryptographic validation**
+   - Verify signature.
+   - Verify identity.
+   - Verify nonce and timestamp.
+4. **Semantic validation**
    - Apply domain‑specific rules to the parsed message.
-4. **State‑dependent validation**
+5. **State‑dependent validation**
    - Check entity existence, ownership, authorization, concurrency rules, etc.
-5. **Decision**
+6. **Decision**
    - If any step fails, reject the message and optionally emit an `Error` or equivalent diagnostic artifact.
    - If all steps pass, proceed to message execution (state transition, query handling, etc.).
 
 Implementations SHOULD ensure that rejected messages cannot cause partial or undefined state changes.
 
-### 4.2. Outbound message generation
+### 5.2. Outbound message generation
 
 Outbound messages (commands, events, responses) MUST also respect validation rules:
 
@@ -204,7 +281,7 @@ This ensures that outbound messages generated by conforming implementations are 
 
 ---
 
-## 5. Domain specifications
+## 6. Domain specifications
 
 Axis Protocol is domain‑agnostic. Each domain that uses Axis Protocol SHOULD provide:
 
@@ -230,16 +307,16 @@ These domain‑level specifications extend this validation document but MUST NOT
 
 ---
 
-## 6. Relationship to implementations
+## 7. Relationship to implementations
 
 - **Axis Protocol** defines the abstract validation model and invariants in this document.
 - **Implementations** (such as Axis Core or other runtimes) provide:
-  - concrete code paths for structural, semantic and state‑dependent validation,
+  - concrete code paths for structural, cryptographic, semantic and state‑dependent validation,
   - integration with storage, transport, authorization systems, and other infrastructure.
 
 An implementation that claims conformance with Axis Protocol MUST:
 
-- Enforce at least the structural validation rules defined here.
+- Enforce at least the structural and cryptographic validation rules defined here.
 - Provide deterministic and consistent behavior for semantic and state‑dependent validation according to its domain specifications.
 - Clearly document any deployment‑specific validation policies (e.g. time skew limits, maximum message sizes, authorization rules).
 

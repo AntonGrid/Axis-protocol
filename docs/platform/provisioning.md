@@ -1,24 +1,26 @@
-# Provisioning Service Specification
+# Provisioning Specification
 
 **Status:** Draft v0.1
 
 ## Introduction
 
-The Provisioning Service is responsible for device registration, identification, and initial configuration within the Axis Protocol ecosystem. It serves as the entry point for all new devices.
+The Provisioning Service is responsible for device registration, identification, and initial configuration within the Axis Protocol ecosystem.
+
+It serves as the entry point for all new devices entering the trust pipeline.
 
 ---
 
 ## Device Registration Process
 
 ### Step 1: Key Generation
-The device generates an Ed25519 key pair on first boot:
+The device generates a cryptographic key pair on first boot:
 - **Private Key** — remains on the device (never leaves it).
-- **Public Key** — sent to the server for registration.
+- **Public Key** — sent to the Provisioning Service for registration.
 
 ### Step 2: Registration Request
 The device sends a request to the Provisioning Service containing:
 - `device_id` — unique identifier (generated on the device).
-- `public_key` — public key in Base64 format.
+- `public_key` — public key (Base64-encoded).
 - `signature` — request signature (to prove key ownership).
 - `device_type` — device type (Basic, Verified, Industrial).
 - `firmware_version` — current firmware version.
@@ -36,10 +38,10 @@ After successful verification, the server generates a **one-time Claim Code** (e
 The device receives:
 - `claim_code` — for user display.
 - `status` — `registered`.
-- `oracle_endpoint` — Oracle URL for sending Proofs.
+- `verifier_endpoint` — endpoint for sending Proofs.
 
 ### Step 6: Owner Linking (Claim)
-The user enters the Claim Code in the Dashboard. The device is then linked to the user's wallet and transitions to the `CLAIMED` state.
+The user enters the Claim Code in a Client Application. The device is then linked to the Owner and transitions to the `CLAIMED` state.
 
 ---
 
@@ -63,7 +65,7 @@ json
 {
   "claim_code": "A7F4-K92Q",
   "status": "registered",
-  "oracle_endpoint": "https://oracle.axisprotocol.io"
+  "verifier_endpoint": "https://verifier.axisprotocol.io"
 }
 POST /identity/claim
 Link a device to an owner using the Claim Code.
@@ -73,7 +75,7 @@ Request:
 json
 {
   "claim_code": "A7F4-K92Q",
-  "wallet": "0x1234..."
+  "owner": "0x1234..."
 }
 Response:
 
@@ -102,6 +104,8 @@ Signature Verification: All requests MUST be signed and verified.
 Claim Codes: One-time use only; expire after a configurable period.
 
 State Management: Device state MUST be stored in the Device Registry (see ADR-0002).
+
+Trust Preservation: Registration MUST preserve the chain of trust.
 
 Related Documents
 ADR-0001: Private Key Never Leaves the Device

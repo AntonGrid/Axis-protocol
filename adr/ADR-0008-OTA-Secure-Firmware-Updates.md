@@ -1,21 +1,21 @@
 # ADR-0008: OTA & Secure Firmware Updates
 
-**Status:** Draft (Approved)  
-**Date:** 2026-07-17 (revised 2026-07-27)  
-**Authors:** Axis Protocol Team  
+**Status:** Draft (Approved)
+**Date:** 2026-07-17 (revised 2026-07-27)
+**Authors:** Axis Protocol Team
 **Related:** ADR-0007, docs/registry, firmware/
 
 ---
 
 ## Context
 
-Axis Protocol reference hardware requires a secure mechanism for delivering and installing firmware updates: image integrity and authenticity, protection of private keys, minimization of bricking risk, rollback on failed updates, and notification/coordination with registries and on-chain anchoring.
+Axis Protocol reference hardware requires a secure mechanism for delivering and installing firmware updates: image integrity and authenticity, protection of private keys, minimization of bricking risk, rollback on failed updates, and notification/coordination with registries and anchoring.
 
 Without a strict OTA model, the following risks exist:
 - Image substitution
 - Installation of unsigned images
 - Inability to roll back
-- Desynchronization between on-chain registries and devices
+- Desynchronization between registries and devices
 
 ---
 
@@ -29,8 +29,8 @@ Without a strict OTA model, the following risks exist:
 - Device verifies manifest → image hash → image signature → compatibility, and only then installs.
 - **Atomicity:** dual-bank (A/B) or verified-boot + pending-flag + fallback (if supported), with smoke-tests and automatic rollback on error within a probation window.
 - **Anti-rollback:** monotonic counter or secure version stored/protected in a secure element (preferred). If secure element is absent — fallback protection with higher risk and limited capabilities.
-- **Notifications:** push (Notification Service signed by Oracle/Registry) or pull (poll Manifest Registry with ETag/If-Modified-Since).
-- **Emergency update flow:** emergency flag in manifest + immediate on-chain emergency anchor (Merkle root) + accelerated delivery.
+- **Notifications:** push (Notification Service signed by Verifier/Registry) or pull (poll Manifest Registry with ETag/If-Modified-Since).
+- **Emergency update flow:** emergency flag in manifest + immediate emergency anchor to an immutable registry + accelerated delivery.
 
 ---
 
@@ -84,7 +84,7 @@ The Manifest is published in the Manifest Registry and can be verified via Merkl
 - **Security:** Signed images and secure boot prevent unauthorized code execution.
 - **Reliability:** Dual-bank and rollback mechanisms minimize bricking risk.
 - **Flexibility:** Emergency updates allow rapid response to critical issues.
-- **Traceability:** All updates are logged in the Manifest Registry and anchored on-chain.
+- **Traceability:** All updates are logged in the Manifest Registry and anchored to an immutable registry.
 
 ---
 

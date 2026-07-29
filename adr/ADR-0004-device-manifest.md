@@ -1,8 +1,8 @@
 # ADR-0004: Device Manifest as Local Configuration Source
 
-**Status:** Accepted  
-**Date:** 2025-06-28 (revised 2026-07-27)  
-**Authors:** Axis Protocol Team  
+**Status:** Accepted
+**Date:** 2025-06-28 (revised 2026-07-27)
+**Authors:** Axis Protocol Team
 
 ---
 
@@ -12,7 +12,7 @@ After registration and onboarding, a question arises: how does the device learn 
 
 ## Decision
 
-After registration or policy changes, the device receives a **signed Device Manifest** — a compact JSON document containing all necessary configuration parameters. The device stores it locally and uses it for operation. The server signs the Manifest with its key; the device verifies the signature.
+After registration or policy changes, the device receives a **signed Device Manifest** — a compact document containing all necessary configuration parameters. The device stores it locally and uses it for operation. The server signs the Manifest with its key; the device verifies the signature.
 
 The Manifest contains:
 
@@ -22,7 +22,7 @@ The Manifest contains:
 - `heartbeat_interval`
 - `proof_threshold`
 - `policy_version`
-- `oracle_endpoint`
+- `verifier_endpoint`
 - `signature`
 
 ## Rationale
@@ -34,9 +34,9 @@ The Manifest contains:
 
 ## Consequences
 
-- The device must be able to store the Manifest in persistent storage (e.g., flash memory).
+- The device must be able to store the Manifest in persistent storage.
 - The device must verify the Manifest signature using the server's public key.
-- When configuration changes, the server sends a new Manifest via OTA or during the next heartbeat.
+- When configuration changes, the server sends a new Manifest via a secure firmware update mechanism or during the next heartbeat.
 - The device compares `policy_version` with the current version and requests an update if they do not match.
 
 ## Alternatives Considered

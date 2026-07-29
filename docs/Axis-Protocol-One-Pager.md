@@ -2,52 +2,72 @@
 
 ## What is Axis?
 
-Axis Protocol is a domain-agnostic trust and attestation framework that connects physical devices and digital systems.
+Axis Protocol is an **overlay trust standard** — a domain-agnostic language of trust between physical devices and digital systems.
 
-Axis defines:
+It defines:
 
-- how devices and actors are identified,
-- how claims about them are issued and verified on-chain,
-- how registries of manifests, capabilities, events, and errors are maintained,
-- how governance and policy are enforced across domains.
+- how physical devices obtain cryptographic identity,
+- how that identity is registered and verified,
+- how devices prove that real-world events occurred,
+- how those proofs are verified by independent parties,
+- how trust is transferred from the physical world to the digital world — and back.
 
-Any vertical — energy, mobility, IoT, supply chain, or others — can implement a **Domain Profile** on top of Axis Core.
+Axis Protocol does **not** define:
+
+- how to store data (blockchain, database, or otherwise),
+- how to execute transactions (smart contracts, off-chain services, or otherwise),
+- how to tokenize assets (energy, carbon, or otherwise).
+
+These are **implementation details** and **application logic**.
 
 ---
 
 ## Core Building Blocks
 
 - **Identity & Actors**
-  - Model for devices, organizations, and services.
-  - Links between off-chain identifiers and on-chain accounts.
+  - Cryptographic identity for devices, organizations, and services.
+  - Links between physical devices and digital identifiers.
 
-- **On-chain Attestation**
-  - Standard format for claims about devices and events.
-  - Contracts/programs to issue, verify, and revoke attestations.
+- **Proof & Attestation**
+  - **Proof** — cryptographic evidence that a physical event occurred.
+  - **Attestation** — signed verification of a Proof by a trusted entity.
 
 - **Registries**
-  - **Manifest Registry** – what this device/actor is.
-  - **Capability Registry** – what this device/actor can do.
-  - **Event Registry** – what happened and when.
-  - **Error Registry** – standardized failure and error codes.
+  - **Device Registry** — source of truth for device identity and state.
+  - **Manifest Registry** — what a device is and what it can do.
+  - **Capability Registry** — what a device or actor is capable of.
+  - **Event Registry** — what happened and when.
+  - **Error Registry** — standardized error codes.
 
 - **Policy & Governance**
   - Rules for who can issue which attestations.
-  - Upgrade and change management via ADR/RFC process.
-  - Conformance requirements for implementations and domains.
+  - ADR/RFC process for protocol evolution.
+  - Conformance requirements for implementations.
+
+---
+
+## Trust Pipeline
+
+Axis Protocol defines a standardized pipeline for trust:
+Physical Device → Event → Proof → Attestation → Digital Trust
+
+text
+
+Each link in the chain is cryptographically verifiable.  
+No trusted third party is required.
 
 ---
 
 ## Axis Core vs Domain Profiles
 
 - **Axis Core**
-  - Domain-agnostic specifications and reference implementation.
-  - Defines common terminology, schemas, and governance.
+  - Domain-agnostic reference implementation of the protocol.
+  - Provides common terminology, schemas, and governance.
   - Owns the ADR/RFC process for protocol-level changes.
 
 - **Domain Profiles**
-  - Extend Axis with domain-specific registries and flows.
-  - Reuse Axis Core primitives for identity and attestation.
+  - Domain-specific extensions (energy, supply chain, identity, etc.).
+  - Reuse Axis Core primitives for identity, proof, and attestation.
   - Must comply with Axis Core conformance and governance.
 
 ---

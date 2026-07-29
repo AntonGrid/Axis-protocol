@@ -1,117 +1,165 @@
 # Axis Protocol — Terminology
 
-This document defines core terminology used in the Axis Protocol.  
-It is **normative** for Axis Core and **referential** for Domain Profiles.
+This document defines core terminology used in the Axis Protocol.
+
+It is **normative** for the protocol and **referential** for implementations and domain profiles.
 
 ---
 
-## 1. Axis Core
+## 1. Axis Protocol
 
-**Axis Core** is the domain-agnostic part of the Axis Protocol. It defines:
+**Axis Protocol** is an **overlay trust standard** — a domain-agnostic language of trust between physical devices and digital systems.
 
-- common concepts, terminology, and schemas,
-- on-chain and off-chain components for identity and attestation,
-- registries (manifest, capability, event, error),
-- governance (ADR/RFC process) and conformance requirements.
+It defines:
+- how devices obtain cryptographic identity,
+- how identity is registered and verified,
+- how devices prove that physical events occurred,
+- how proofs are verified by independent parties,
+- how trust is transferred from the physical world to the digital world — and back.
 
-All Domain Profiles MUST be compatible with Axis Core.
+Axis Protocol is **not** tied to any specific blockchain, platform, vendor, or domain.
 
 ---
 
-## 2. Domain Profile
+## 2. Device
 
-A **Domain Profile** is a specialization of Axis Core for a specific vertical (e.g. energy, mobility, IoT, supply chain).
+A **Device** is a physical entity that produces events.
 
-Characteristics:
+It has:
+- a **cryptographic identity** (private key + public key),
+- a **stable identifier** (device ID),
+- a **manifest** that defines its capabilities and configuration.
 
-- Defines domain-specific registries, events, and flows.
-- Reuses Axis Core primitives for identity, attestation, and governance.
-- MUST NOT redefine or conflict with Axis Core terminology.
-- MUST document its own conformance rules on top of Axis Core.
+The private key **never leaves the device**.
+
+---
+
+## 3. Event
+
+An **Event** is a measurable occurrence produced by a Device.
 
 Examples:
-- **Energy Domain Profile** – for energy generation and metering.
-- **Mobility Domain Profile** – for vehicle tracking and fleet management.
-- **Supply Chain Profile** – for product traceability and provenance.
+- generation of 1 MWh of electricity,
+- movement of a package through a checkpoint,
+- completion of a manufacturing step.
+
+Events are **not transmitted directly**. They are **proved** cryptographically.
 
 ---
 
-## 3. Actor
+## 4. Proof
 
-An **Actor** is any identifiable participant interacting with Axis:
+A **Proof** is a cryptographic statement that a specific Event occurred, produced by a Device.
 
-- physical devices (sensors, meters, controllers),
-- organizations (manufacturers, operators, auditors),
-- services (oracles, applications, contracts).
+A Proof contains:
+- `device_id` — identifier of the device,
+- `event_data` — structured description of the event,
+- `timestamp` — when the event occurred,
+- `nonce` — to prevent replay attacks,
+- `signature` — cryptographic signature by the device's private key.
 
-Each Actor has:
-
-- one or more **off-chain identifiers** (e.g. serial number, certificate subject, legal entity ID),
-- one or more **on-chain accounts** (e.g. public keys, program IDs),
-- a **Manifest** describing its identity and properties.
-
----
-
-## 4. Attestation
-
-An **Attestation** is a signed statement by an Actor about a claim, asset, or event.
-
-It includes:
-
-- **Claim** — a structured statement about the world (e.g., "device X produced 1 kWh").
-- **Evidence** — data that supports the claim.
-- **Signature** — cryptographic proof of the Actor's identity.
-
-Attestations are verified on-chain or off-chain using Axis Core primitives.
+The Proof is the **atomic unit of trust** from the physical world.
 
 ---
 
-## 5. Registry
+## 5. Verifier
 
-A **Registry** is a structured repository of protocol information.
+A **Verifier** is any entity that checks a Proof:
+- signature validity,
+- nonce uniqueness,
+- timestamp freshness,
+- consistency with the device's registry state.
 
-Types of registries:
-
-- **Manifest Registry** — stores Actor manifests and their properties.
-- **Capability Registry** — defines what Actors can do (e.g., "can produce energy").
-- **Event Registry** — logs events and their timestamps.
-- **Error Registry** — standardizes error codes and failure conditions.
-
-All registries MUST follow Axis Core schemas and governance rules.
+Verification is **deterministic** and does not require a trusted third party.
 
 ---
 
-## 6. Policy & Governance
+## 6. Attestation
 
-**Policy** defines rules for:
+An **Attestation** is a signed statement by a trusted entity (e.g., an Oracle) that a Proof has been verified and is valid.
 
+An Attestation contains:
+- `proof_id` — reference to the Proof,
+- `decision` — whether the Proof is valid or invalid,
+- `oracle_id` — identifier of the attesting entity,
+- `timestamp` — when the attestation was issued,
+- `signature` — signature by the attesting entity.
+
+The Attestation is the **bridge** from the physical world to the digital world.
+
+---
+
+## 7. Registry
+
+A **Registry** is a verifiable store of device identities, states, and attestations.
+
+The Registry is the **source of truth** for the protocol.
+
+It maintains:
+- device identity and public keys,
+- device lifecycle states,
+- attestation history,
+- policy definitions.
+
+---
+
+## 8. Digital Claim
+
+A **Digital Claim** is a statement in the digital world that is backed by an Attestation.
+
+Examples:
+- "Device X produced 1 MWh of electricity."
+- "Device Y is currently in State Z."
+
+Digital Claims are **cryptographically anchored** to physical events through the Proof → Attestation pipeline.
+
+---
+
+## 9. Trust Graph
+
+The **Trust Graph** connects:
+- Devices → Proofs → Attestations → Digital Claims → Applications.
+
+Any participant can verify any link in the graph independently.
+
+---
+
+## 10. Policy
+
+A **Policy** is a set of rules governing trust and verification.
+
+Policies define:
 - who can issue which attestations,
 - how claims are validated,
 - how conflicts are resolved.
 
-**Governance** defines:
+---
 
-- how the protocol evolves (ADR/RFC process),
-- who decides on changes (community, token holders, guardians),
-- how registries are updated and maintained.
+## 11. Oracle
+
+An **Oracle** is a trusted entity that verifies Proofs and issues Attestations.
+
+The Oracle acts as a bridge between the physical world and the digital world.
 
 ---
 
-## 7. Reference Implementation
+## 12. Reference Implementation
 
-A **Reference Implementation** is a concrete implementation of Axis Core (e.g., Axis-core repository). It:
+A **Reference Implementation** is a concrete implementation of Axis Protocol (e.g., Axis Core).
 
+It:
 - demonstrates how the protocol works,
 - provides libraries, SDKs, and tools,
-- serves as a baseline for Domain Profiles.
+- serves as a baseline for domain profiles.
 
-Domain Profiles MAY build on or extend the Reference Implementation.
+Reference implementations are **not** part of the protocol.
 
 ---
 
-## Normative vs. Informative
+## 13. Normative vs. Informative
 
 - **Normative** — must be followed for conformance.
 - **Informative** — explanatory, non-binding.
 
-Axis Core is normative for all Domain Profiles. Domain Profiles MAY define additional normative rules, but they MUST NOT conflict with Axis Core.
+The protocol specification is normative.  
+Reference implementations and domain profiles are informative.

@@ -14,13 +14,17 @@
 
 **Language:** English
 
-**License:** MIT
+**License:** Apache 2.0
 
 ---
 
 ## Abstract
 
-The Axis Protocol is an open, implementation-independent standard for establishing cryptographically verifiable trust between physical infrastructure and distributed digital systems.
+Axis Protocol is an **overlay trust standard** — an open, implementation-independent standard for establishing cryptographically verifiable trust between physical devices and digital systems.
+
+It is **not a blockchain protocol**.  
+It is **not an application**.  
+It is **not tied to energy, IoT, or any specific domain**.
 
 This specification defines the normative behavior of compliant Axis implementations.
 
@@ -38,32 +42,31 @@ Conformance with this specification enables interoperability between independent
 
 This specification defines:
 
-- Protocol architecture
-- Component responsibilities
-- Device identity
-- Provisioning
-- Device Registry
-- Policy Engine
-- Oracle behavior
-- Smart Contract behavior
-- Protocol Economics
-- Cryptography
-- Protocol Interfaces
-- Protocol Events
-- Error Model
-- Client Applications
-- Software Development Kit (SDK)
-- Protocol Governance
-- Mainnet Readiness
-- Security Requirements
+- **Trust Model** — how trust is established, verified, and transferred.
+- **Device Identity** — cryptographic identity for physical devices.
+- **Device Registry** — source of truth for device identity and state.
+- **Proof** — cryptographic evidence of physical events.
+- **Attestation** — signed verification of Proofs by trusted entities.
+- **Verification** — independent validation of Proofs and Attestations.
+- **Policy** — rules governing trust and verification.
+- **Lifecycle** — how trust entities are born, live, and die.
+- **Cryptography** — cryptographic primitives and requirements.
+- **Protocol Interfaces** — how messages are structured and exchanged.
 
-This specification does not define implementation details except where explicitly stated.
+This specification does **not** define:
+
+- **Storage** — no blockchain, database, or persistence model is assumed.
+- **Execution** — no smart contracts, off-chain services, or transaction models are assumed.
+- **Domain Logic** — no energy, supply chain, identity, or other vertical logic is defined.
+- **Implementation** — no reference code, SDKs, or deployment models are specified.
+
+These belong in implementations (like Axis Core) and applications.
 
 ---
 
 ## Document Lifecycle
 
-The Axis Protocol Specification evolves through the following stages.
+The Axis Protocol Specification evolves through the following stages:
 Working Draft (WD)
 │
 ▼
@@ -92,7 +95,7 @@ Protocol Version indicates protocol compatibility.
 
 ---
 
-### Part II — Protocol Architecture
+### Part II — Trust Architecture
 
 04 Architecture Overview
 
@@ -116,62 +119,40 @@ Protocol Version indicates protocol compatibility.
 
 ---
 
-### Part IV — Protocol Services
+### Part IV — Trust Services
 
 12 Policy Engine
 
 13 Oracle
 
-14 Proof-of-Production
+14 Proof Verification
 
 ---
 
-### Part V — Blockchain Layer
+### Part V — Communication
 
-15 Smart Contract
+15 Cryptography
 
-16 Protocol Economics
+16 Protocol Interfaces
 
----
+17 Protocol Events
 
-### Part VI — Communication
-
-17 Cryptography
-
-18 Protocol Interfaces
-
-19 Protocol Events
-
-20 Error Model
+18 Error Model
 
 ---
 
-### Part VII — Client Ecosystem
+### Part VI — Governance
 
-21 Client Applications
-
-22 Software Development Kit (SDK)
+19 Protocol Governance
 
 ---
 
-### Part VIII — Governance
+### Part VII — Security
 
-23 Protocol Governance
-
----
-
-### Part IX — Deployment
-
-24 Mainnet Readiness
+20 Security Considerations
 
 ---
 
-### Part X — Security
+### Part VIII — References
 
-25 Security Considerations
-
----
-
-### Part XI — References
-
-26 References
+21 References

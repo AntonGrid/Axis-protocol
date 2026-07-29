@@ -82,4 +82,4 @@ The Domain Profile **does not know** how trust is established at the Core Protoc
 
 ## Implementation Status
 
-The separation is accepted at the architectural level. The Core Protocol implementation resides in the Axis-core repository. The Energy Domain Profile is implemented in the ENERG repository.
+The separation is accepted at the architectural level. The Core Protocol implementation resides in the Axis-core repository. The Domain Profile is implemented as a separate application.

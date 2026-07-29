@@ -1,11 +1,10 @@
 # Axis Protocol – Entity and Message Lifecycle
 
-This document describes the **logical lifecycle** of entities and messages in systems built on Axis Protocol.  
+This document describes the **logical lifecycle** of entities, messages, and trust relationships in systems built on Axis Protocol.
 It is **implementation‑neutral** and does not assume any specific ledger, database, blockchain, or runtime.
 
-Axis Protocol itself defines **messages and invariants**, not a global state model.  
-However, most deployments will interpret messages as operations on some notion of *entities* and *state*.  
-This document provides a common vocabulary and recommended patterns for such lifecycles.
+Axis Protocol defines **messages and invariants**, not a global state model. However, most deployments will interpret messages as operations on some notion of *entities* and *state*.
+This document provides a common vocabulary and recommended patterns for such lifecycles, with a focus on **how trust is born, lives, and dies**.
 
 ---
 
@@ -29,7 +28,20 @@ Each entity is identified by:
 
 Axis Protocol does not prescribe how entities are stored or represented internally.
 
-### 1.2. Messages and state transitions
+### 1.2. Trust Entity
+
+A **Trust Entity** is an entity that carries cryptographic trust.
+
+Examples:
+
+- **Device** — a physical entity with cryptographic identity.
+- **Proof** — cryptographic evidence of an event.
+- **Attestation** — signed verification of a Proof.
+- **Claim** — a digital statement backed by an Attestation.
+
+The lifecycle of a Trust Entity is the lifecycle of trust itself.
+
+### 1.3. Messages and state transitions
 
 Implementations typically interpret messages as **state transitions** or **state observations**.
 
@@ -40,11 +52,69 @@ Common patterns:
 - **Queries / QueryResponses** – read‑only access to current or derived state.
 - **Notifications / Errors** – auxiliary messages.
 
-The **lifecycle** of an entity is thus the sequence of valid state transitions driven by messages.
+The **lifecycle** of a Trust Entity is the sequence of valid state transitions driven by messages.
 
 ---
 
-## 2. Generic entity lifecycle
+## 2. Trust Lifecycle
+
+Trust in Axis Protocol follows a pipeline:
+Physical Device → Event → Proof → Attestation → Digital Claim
+
+text
+
+Each stage has its own lifecycle.
+
+### 2.1. Device Lifecycle
+
+A Device is the origin of trust. Its lifecycle is:
+
+1. **Unregistered** — Device is unknown to the system.
+2. **Registered** — Device has a cryptographic identity but no owner.
+3. **Claimed** — Device is linked to an owner.
+4. **Provisioned** — Device is configured and ready.
+5. **Active** — Device is fully operational, producing Proofs.
+6. **Suspended** — Device is temporarily disabled.
+7. **Maintenance** — Device is undergoing maintenance.
+8. **Revoked** — Device is permanently decommissioned.
+
+The Device lifecycle is the **foundation** of all trust in the system.
+
+### 2.2. Proof Lifecycle
+
+A Proof is the atomic unit of trust from the physical world.
+
+1. **Generated** — Device produces a Proof.
+2. **Submitted** — Proof is sent to a Verifier.
+3. **Verified** — Proof is cryptographically validated.
+4. **Attested** — A trusted entity issues an Attestation.
+5. **Stored** — Proof is recorded in the Registry.
+6. **Expired** — Proof is no longer valid (if time‑bounded).
+7. **Revoked** — Proof is explicitly invalidated.
+
+### 2.3. Attestation Lifecycle
+
+An Attestation is signed verification of a Proof.
+
+1. **Issued** — Oracle verifies Proof and issues Attestation.
+2. **Stored** — Attestation is recorded in the Registry.
+3. **Used** — Attestation is referenced by Claims or applications.
+4. **Expired** — Attestation is no longer valid (if time‑bounded).
+5. **Revoked** — Attestation is explicitly invalidated.
+
+### 2.4. Claim Lifecycle
+
+A Claim is a digital statement backed by an Attestation.
+
+1. **Created** — Claim is derived from an Attestation.
+2. **Used** — Claim is used by applications.
+3. **Superseded** — Claim is replaced by a newer Claim.
+4. **Expired** — Claim is no longer valid.
+5. **Revoked** — Claim is explicitly invalidated.
+
+---
+
+## 3. Generic entity lifecycle
 
 Axis Protocol is domain‑agnostic, but most entities follow some variation of the following generic phases:
 
@@ -62,9 +132,9 @@ Each domain MAY refine or rename these phases, but SHOULD define:
 
 ---
 
-## 3. Creation
+## 4. Creation
 
-### 3.1. Creation messages
+### 4.1. Creation messages
 
 Entity creation is typically initiated by one of the following:
 
@@ -76,7 +146,7 @@ Axis Protocol does not fix which pattern must be used, but deployments SHOULD do
 - The allowed creation messages per `entity_type`.
 - Required fields and preconditions for creation.
 
-### 3.2. Preconditions for creation (examples)
+### 4.2. Preconditions for creation (examples)
 
 Typical state‑independent preconditions:
 
@@ -92,11 +162,11 @@ If any precondition fails, the creation message MUST be rejected.
 
 ---
 
-## 4. Updates
+## 5. Updates
 
-### 4.1. Update messages
+### 5.1. Update messages
 
-Updates are messages that modify or extend an existing entity’s state.  
+Updates are messages that modify or extend an existing entity’s state.
 They are typically modeled as **Commands** and/or **Events**.
 
 Key questions each domain MUST answer:
@@ -105,7 +175,7 @@ Key questions each domain MUST answer:
 - What lifecycle phase(s) allow updates?
 - How are partial updates represented (e.g. patches vs full snapshots)?
 
-### 4.2. Preconditions for updates
+### 5.2. Preconditions for updates
 
 Examples of common rules:
 
@@ -117,11 +187,11 @@ If these conditions are not met, the update message MUST be rejected or lead to 
 
 ---
 
-## 5. Suspension and resumption
+## 6. Suspension and resumption
 
 Some domains require temporarily disabling an entity (e.g. maintenance mode for a device, account freeze).
 
-### 5.1. Suspension
+### 6.1. Suspension
 
 A **suspend** operation typically:
 
@@ -134,7 +204,7 @@ In the `Suspended` phase:
 - Certain operations (e.g. usage, billing, external communication) may be blocked.
 - Maintenance or administrative operations may still be allowed.
 
-### 5.2. Resumption
+### 6.2. Resumption
 
 A **resume** operation:
 
@@ -148,7 +218,7 @@ Domains SHOULD specify:
 
 ---
 
-## 6. Termination / retirement
+## 7. Termination / retirement
 
 Termination (or retirement) marks the logical end of an entity’s active lifecycle.
 
@@ -168,12 +238,12 @@ Common rules:
 
 ---
 
-## 7. Message lifecycle and ordering
+## 8. Message lifecycle and ordering
 
-Axis Protocol itself does not mandate a global ordering mechanism.  
+Axis Protocol itself does not mandate a global ordering mechanism.
 However, many deployments impose ordering at the entity level (e.g. via sequence numbers or timestamps).
 
-### 7.1. Message ordering per entity
+### 8.1. Message ordering per entity
 
 Typical strategies:
 
@@ -190,7 +260,7 @@ Implementations SHOULD clearly document:
 - whether message ordering is strictly enforced,
 - how out‑of‑order messages are handled.
 
-### 7.2. Idempotence and duplication
+### 8.2. Idempotence and duplication
 
 Deployments SHOULD define which messages are intended to be **idempotent** at the entity level.
 
@@ -207,7 +277,7 @@ Strategies for handling duplicates:
 
 ---
 
-## 8. Error handling in lifecycles
+## 9. Error handling in lifecycles
 
 When a message cannot be applied to an entity due to lifecycle violations (e.g. wrong phase, conflicting update), the system SHOULD:
 
@@ -224,7 +294,7 @@ The exact error catalog is domain‑specific but SHOULD be documented and applie
 
 ---
 
-## 9. Multi‑entity workflows
+## 10. Multi‑entity workflows
 
 Many real‑world processes involve multiple entities (e.g. an order referencing multiple devices, or a contract spanning several accounts).
 
@@ -241,7 +311,7 @@ Lifecycle rules for multi‑entity operations SHOULD specify:
 
 ---
 
-## 10. Relationship to implementations
+## 11. Relationship to implementations
 
 - **Axis Protocol** defines:
   - how entities are referenced in messages (`domain`, `entity_type`, `entity_id`),
