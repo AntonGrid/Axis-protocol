@@ -98,6 +98,37 @@ Exact anchoring frequency and mechanisms MAY vary between deployments but MUST b
   - quorum and approval thresholds;
   - how emergency overrides are logged, justified, and audited.
 
+### 9. Device Key Storage Trust Tiers
+
+To make "stored in a secure hardware module" (Section 4) operational, device key
+storage is classified into three trust tiers. The tier is a property of the
+deployment (device + provisioning process), not of the protocol message format,
+and it MUST be documented per device model.
+
+| Tier | Key storage | Signing | Section 4 compliance | Production (mainnet) |
+| :--- | :--- | :--- | :--- | :--- |
+| `basic` | Plain flash / NVS (Preferences) | CPU | No | MUST NOT be used |
+| `hardware-aided` | Secure Element data slot (e.g. ATECC608A) | CPU (key material appears in RAM) | Partial | Allowed only with a documented risk assessment and an explicit governance decision |
+| `conforming` | Secure Element with on-chip signing (e.g. NXP SE050) | Inside the Secure Element; key never leaves it | Full | REQUIRED |
+
+- **`basic`** — the private key is stored in ordinary flash memory (e.g. ESP32
+  NVS/Preferences). Suitable for development and education only; MUST NOT be
+  used in production.
+- **`hardware-aided`** — the seed is stored in a Secure Element slot, but the
+  device cannot sign the required algorithm on-chip (e.g. ATECC608A does not
+  support Ed25519), so the key material is present in CPU RAM during signing.
+  This reduces exposure compared to `basic` but is not full Section 4
+  compliance.
+- **`conforming`** — the key is generated inside a Secure Element that performs
+  Ed25519 signing on-chip (e.g. NXP SE050); the private key never leaves the
+  Secure Element. This is the only tier that fully satisfies Section 4
+  ("Private keys MUST be stored in a secure hardware module").
+
+**Mainnet requirement:** device keys MUST be stored in the `conforming` tier.
+`hardware-aided` MAY be used on mainnet only with a documented risk assessment
+and an explicit governance decision (ADR-0009). `basic` MUST NOT be used in
+production.
+
 ---
 
 ## Related ADRs
