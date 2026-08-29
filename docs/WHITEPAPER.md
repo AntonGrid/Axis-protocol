@@ -30,6 +30,16 @@ On top of this standard we build three things no single project has combined:
    *quality federated contributions*, screened by MAD, weighted by ERS — a
    second earning channel alongside physical production.
 
+### In one story
+
+> A farmer installs a solar panel. Every kilowatt-hour it produces becomes a
+> signed proof and — through the ENRG profile — **SRC tokens for the electricity**
+> the grid actually received. The same device also feeds its local model, and
+> when its forecast of tomorrow's clouds helps the network plan the load, the
+> farmer's contribution earns **ERS reputation** — which then gives him more
+> weight in pool rewards and, later, premium access to the market. He is not
+> just a miner of energy; he is a neuron of the grid's intelligence.
+
 ---
 
 ## 1. The problem
@@ -136,9 +146,10 @@ The network learns at four levels:
 ```
 
 where `θ_g` is the gateway weights, `n_g` the local sample count, and
-`w_g(ERS) = 0.1 + 0.9·ERS^α` a reputation multiplier in `[0.1, 1.0]`.
-Outliers are removed first by a **MAD** screen (robust to a malicious gateway
-inflating the variance). The global model is **read-only** — it proposes.
+`w_g(ERS) = 0.1 + 0.9·ERS^α` a reputation multiplier in `[0.1, 1.0]`
+(operational default **`α = 0.7`**). Outliers are removed first by a **MAD**
+screen with a **3×MAD threshold** (robust to a malicious gateway inflating the
+variance). The global model is **read-only** — it proposes.
 
 ## 4. The closed loop
 
@@ -170,6 +181,21 @@ the price rose, the negative reward corrects the next recommendation
 - **Slashing** — economic penalty for malicious contributions (stake-backed),
   complementing MAD + ERS (C-6).
 
+### Unit economics (devnet pilot)
+
+The economics are deliberately lean at the protocol level:
+
+- verifying **1 MWh** of energy costs **≈ 0.001 SOL** in on-chain fees
+  (one `mint_energy` instruction with an address-lookup table);
+- processing **one PoI contribution** (signature check + MAD screen + weighted
+  average) costs **≈ 0.0005 SOL** off-chain, with only a compact commitment
+  digest posted on-chain per round.
+
+At **1,000+ devices** the aggregate fee per verified unit drops below the
+value of the minted SRC + ERS-weighted pool rewards, and the economics become
+**positive** — the network can pay for its own verification and intelligence
+without subsidies.
+
 ## 6. Security model
 
 | Threat | Mechanism |
@@ -178,20 +204,33 @@ the price rose, the negative reward corrects the next recommendation
 | Spam contributions | stake per contribution, nonce/frequency limits, min samples |
 | Privacy leak | FL: weights only + differential privacy (planned) |
 | Oracle compromise | device keys in Secure Elements; on-chain writes oracle-only |
+| **Device key compromise** | **DAO-governed device revocation + key rotation through the Secure Element (SE050)** — the leaked key signs nothing after the revocation epoch, and the SE050's monotonic counter blocks rollback |
 | Model "escape" | no keys, no execution path (C-4) + physical interlocks + DAO kill-switch |
 | DAO capture | quadratic voting, timelocks, risk-tiered quorums (ADR-0009) |
 
 ## 7. Roadmap
 
-| Phase | Focus | Status |
-|---|---|---|
-| 0 | One map, constitution, glossary | ✅ done |
-| 1 | Living demo: proofs → AI signals → signed attestation → UI | ✅ mostly done (counter paused) |
-| 2 | PoI: ERS economy, leaderboard, commitment digests, ERS loop | ✅ done (off-chain) |
-| 3 | Closed economic loop: recommender + policy gates + reward | ✅ done (simulation) |
-| 4 | Standard: this paper, conformance, second domain, community | 🔄 in progress |
+| Phase | Focus | Success metrics | Status |
+|---|---|---|---|
+| 0 | One map, constitution, glossary | — | ✅ done |
+| 1 | Living demo: proofs → AI signals → signed attestation → UI | LIVE widget on the landing | ✅ mostly done (counter paused) |
+| 2 | PoI: ERS economy, leaderboard, commitment digests, ERS loop | leaderboard, MAD-screened rounds | ✅ done (off-chain) |
+| 3 | Closed economic loop: recommender + policy gates + reward | trade simulation, DAO gate | ✅ done (simulation) |
+| 4 | Standard: this paper, conformance, second domain, community | **second domain (logistics) — 50-device pilot, 1,000+ signals/day** | 🔄 in progress |
 
 ---
 
 *See also:* [ECOSYSTEM.md](./ECOSYSTEM.md) · [CONSTITUTION.md](./CONSTITUTION.md) ·
 [GLOSSARY.md](./GLOSSARY.md) · `spec/` · `adr/`.
+
+### Code & specifications
+
+Full code and specifications live across the ecosystem repositories:
+
+| Layer | Repository | What to find there |
+|---|---|---|
+| L0 Standard | [`Axis-protocol`](https://github.com/AntonGrid/Axis-protocol) | **ADRs** (0001–0010), `spec/protocol/`, constitution, glossary |
+| L1 Reference impl. | [`Axis-core`](https://github.com/AntonGrid/Axis-core) | **policy** engine, **AI** signals, trust envelope, EVM bridge, SDK |
+| L2 Domain profile | [`ENRG`](https://github.com/AntonGrid/ENRG) | **on-chain** program, oracle, ESP32 firmware, SRC/ERS |
+| L3 Intelligence | [`ENRG-AI`](https://github.com/AntonGrid/ENRG-AI) | **HFL**, PoI leaderboard, signals, recommender, DAO evolution |
+| L4 Interfaces | [`enrg-landing`](https://github.com/AntonGrid/enrg-landing) · [`Axis-connect`](https://github.com/AntonGrid/Axis-connect) | live widget, PWA dashboard |
