@@ -47,6 +47,8 @@ Typical entry points:
    - [`ECOSYSTEM.md`](./ECOSYSTEM.md) — one map of the whole ecosystem (standard → core → domain → intelligence → interfaces).
    - [`CONSTITUTION.md`](./CONSTITUTION.md) — the canonical constitution: T-1..T-5, C-1..C-7, L-1..L-8.
    - [`GLOSSARY.md`](./GLOSSARY.md) — unified terminology across all repositories.
+   - [`WHITEPAPER.md`](./WHITEPAPER.md) — "Sovereign Intelligence for the Physical World" (v1).
+   - [`profiles/LOGISTICS.md`](./profiles/LOGISTICS.md) — second domain demo (cold-chain logistics), proving domain-agnosticism.
    - [`Axis-Protocol-One-Pager.md`](./Axis-Protocol-One-Pager.md) — high‑level overview.
    - [`Axis-Protocol-Overview.md`](./Axis-Protocol-Overview.md) — detailed overview.
    - [`Axis-Protocol-Specification.md`](./Axis-Protocol-Specification.md) — full specification.
