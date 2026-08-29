@@ -44,6 +44,9 @@ Typical entry points:
    - [`../adr/`](../adr/) — Architecture Decision Records (ADRs).
 
 3. **Concepts and Guides (this directory)**
+   - [`ECOSYSTEM.md`](./ECOSYSTEM.md) — one map of the whole ecosystem (standard → core → domain → intelligence → interfaces).
+   - [`CONSTITUTION.md`](./CONSTITUTION.md) — the canonical constitution: T-1..T-5, C-1..C-7, L-1..L-8.
+   - [`GLOSSARY.md`](./GLOSSARY.md) — unified terminology across all repositories.
    - [`Axis-Protocol-One-Pager.md`](./Axis-Protocol-One-Pager.md) — high‑level overview.
    - [`Axis-Protocol-Overview.md`](./Axis-Protocol-Overview.md) — detailed overview.
    - [`Axis-Protocol-Specification.md`](./Axis-Protocol-Specification.md) — full specification.

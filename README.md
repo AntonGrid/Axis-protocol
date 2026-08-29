@@ -69,6 +69,26 @@ Implementations SHOULD treat the specifications in `spec/` as normative and docu
 
 ---
 
+## The Ecosystem (One Map)
+
+Axis is the **standard** layer of a four-layer ecosystem. ENRG (energy) is the
+first living domain profile; ENRG-AI is the intelligence layer; the frontends
+make it visible. Start here:
+
+- [**Ecosystem map**](docs/ECOSYSTEM.md) — layers, repositories, trust pipeline, ADR index, roadmap.
+- [**Constitution**](docs/CONSTITUTION.md) — the non-negotiable laws (T-1..T-5, C-1..C-7, L-1..L-8).
+- [**Glossary**](docs/GLOSSARY.md) — one vocabulary across all repositories.
+
+| Layer | Repository |
+|---|---|
+| L0 Standard | **Axis-protocol** (this repo) |
+| L1 Reference implementation | [**Axis-core**](https://github.com/AntonGrid/Axis-core) |
+| L2 Domain profile (energy) | [**ENRG**](https://github.com/AntonGrid/ENRG) |
+| L3 Intelligence | [**ENRG-AI**](https://github.com/AntonGrid/ENRG-AI) |
+| L4 Interfaces | [**enrg-landing**](https://github.com/AntonGrid/enrg-landing) · [**Axis-connect**](https://github.com/AntonGrid/Axis-connect) |
+
+---
+
 ## Reference Implementations
 
 - [**Axis Core**](https://github.com/AntonGrid/Axis-core) — the universal reference implementation of the protocol (schemas, validation, oracle with Ed25519 verification).
